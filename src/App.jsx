@@ -13,7 +13,6 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 
-// --- SUAS CREDENCIAIS REAIS DO FIREBASE ---
 const firebaseConfig = {
   apiKey: "AIzaSyD0mszBLJTUUjmES4628snmfeFdeqJglP0",
   authDomain: "futsal-training-hub.firebaseapp.com",
@@ -24,7 +23,6 @@ const firebaseConfig = {
   measurementId: "G-3CW5EXW5DF"
 };
 
-// Inicialização segura do Firebase
 let auth = null;
 let db = null;
 try {
