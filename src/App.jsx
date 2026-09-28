@@ -6,12 +6,6 @@ import {
   signOut,
   onAuthStateChanged
 } from 'firebase/auth';
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  onSnapshot
-} from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: "AIzaSyD0mszBLJTUUjmES4628snmfeFdeqJglP0",
@@ -24,14 +18,11 @@ const firebaseConfig = {
 };
 
 let auth = null;
-let db = null;
 try {
   const app = initializeApp(firebaseConfig);
   auth = getAuth(app);
-  // Inicialização explícita da BD default
-  db = getFirestore(app, '(default)');
 } catch (e) {
-  console.warn("Erro ao iniciar Firebase:", e);
+  console.warn("Firebase não inicializado.");
 }
 
 const EQUIPAS_INICIAIS = [
@@ -93,14 +84,31 @@ export default function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [statusMessage, setStatusMessage] = useState('');
+  const [statusMsg, setStatusMsg] = useState('⚡ Sistema Pronto');
 
   const [activeTab, setActiveTab] = useState('live');
   const [teams, setTeams] = useState(EQUIPAS_INICIAIS);
-  const [exercises, setExercises] = useState(EXERCICIOS_INICIAIS);
-  const [sessions, setSessions] = useState(SESSOES_INICIAIS);
-  const [liveSession, setLiveSession] = useState(null);
+  
+  // Persistência local inteligente para exercícios e sessões
+  const [exercises, setExercises] = useState(() => {
+    try {
+      const saved = localStorage.getItem('futsal_exercises_v1');
+      return saved ? JSON.parse(saved) : EXERCICIOS_INICIAIS;
+    } catch {
+      return EXERCICIOS_INICIAIS;
+    }
+  });
 
+  const [sessions, setSessions] = useState(() => {
+    try {
+      const saved = localStorage.getItem('futsal_sessions_v1');
+      return saved ? JSON.parse(saved) : SESSOES_INICIAIS;
+    } catch {
+      return SESSOES_INICIAIS;
+    }
+  });
+
+  const [liveSession, setLiveSession] = useState(null);
   const [activeTeamId, setActiveTeamId] = useState(EQUIPAS_INICIAIS[0].id);
   const activeTeam = teams.find((t) => t.id === activeTeamId) || teams[0];
 
@@ -129,64 +137,22 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // Sincronização em tempo real com o Firestore com tratamento de erros visíveis
+  // Guardar automaticamente no armazenamento local sempre que houver alterações
   useEffect(() => {
-    if (!db) {
-      setStatusMessage('⚠️ Base de dados não inicializada.');
-      return;
+    try {
+      localStorage.setItem('futsal_exercises_v1', JSON.stringify(exercises));
+    } catch (e) {
+      console.error(e);
     }
+  }, [exercises]);
 
-    const unsubExercises = onSnapshot(doc(db, 'futsal_hub', 'exercises'), (docSnap) => {
-      if (docSnap.exists() && docSnap.data().list) {
-        setExercises(docSnap.data().list);
-      }
-    }, (err) => {
-      console.warn("Erro ao ler exercícios do Firestore:", err);
-      setStatusMessage('❌ Erro de permissão/leitura no Firestore.');
-    });
-
-    const unsubSessions = onSnapshot(doc(db, 'futsal_hub', 'sessions'), (docSnap) => {
-      if (docSnap.exists() && docSnap.data().list) {
-        setSessions(docSnap.data().list);
-      }
-    }, (err) => {
-      console.warn("Erro ao ler sessões do Firestore:", err);
-      setStatusMessage('❌ Erro de permissão/leitura no Firestore.');
-    });
-
-    return () => {
-      unsubExercises();
-      unsubSessions();
-    };
-  }, []);
-
-  const saveExercisesToCloud = async (newExercises) => {
-    setExercises(newExercises);
-    if (db) {
-      try {
-        await setDoc(doc(db, 'futsal_hub', 'exercises'), { list: newExercises });
-        setStatusMessage('✅ Exercícios guardados na cloud!');
-        setTimeout(() => setStatusMessage(''), 3000);
-      } catch (e) {
-        console.error("Erro ao guardar exercícios:", e);
-        setStatusMessage('❌ Erro ao gravar exercícios (ver consola).');
-      }
+  useEffect(() => {
+    try {
+      localStorage.setItem('futsal_sessions_v1', JSON.stringify(sessions));
+    } catch (e) {
+      console.error(e);
     }
-  };
-
-  const saveSessionsToCloud = async (newSessions) => {
-    setSessions(newSessions);
-    if (db) {
-      try {
-        await setDoc(doc(db, 'futsal_hub', 'sessions'), { list: newSessions });
-        setStatusMessage('✅ Sessão guardada na cloud!');
-        setTimeout(() => setStatusMessage(''), 3000);
-      } catch (e) {
-        console.error("Erro ao guardar sessões:", e);
-        setStatusMessage('❌ Erro ao gravar sessão (verifique as Regras).');
-      }
-    }
-  };
+  }, [sessions]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -284,15 +250,16 @@ export default function App() {
       ? exercises.map(item => item.id === editingExerciseId ? exercise : item) 
       : [...exercises, exercise];
     
-    saveExercisesToCloud(updated);
+    setExercises(updated);
     setNewExName('');
     setNewExUrl('');
     setEditingExerciseId(null);
+    setStatusMsg('💾 Exercício guardado!');
+    setTimeout(() => setStatusMsg('⚡ Sistema Pronto'), 2500);
   };
 
   const handleDeleteExercise = (exerciseId) => {
-    const updated = exercises.filter(exercise => exercise.id !== exerciseId);
-    saveExercisesToCloud(updated);
+    setExercises(exercises.filter(exercise => exercise.id !== exerciseId));
   };
 
   const handleAddVariation = () => {
@@ -331,14 +298,15 @@ export default function App() {
       ? sessions.map(s => s.id === editingSessionId ? session : s) 
       : [...sessions, session];
 
-    saveSessionsToCloud(updated);
+    setSessions(updated);
     resetSessionForm();
     setActiveTab('live');
+    setStatusMsg('💾 Sessão guardada!');
+    setTimeout(() => setStatusMsg('⚡ Sistema Pronto'), 2500);
   };
 
   const handleDeleteSession = (sessionId) => {
-    const updated = sessions.filter(s => s.id !== sessionId);
-    saveSessionsToCloud(updated);
+    setSessions(sessions.filter(s => s.id !== sessionId));
   };
 
   const castToTV = (session) => {
@@ -423,11 +391,9 @@ export default function App() {
           <h1 className="font-black tracking-wider text-[#d1a153]">Performance Hub</h1>
         </div>
 
-        {statusMessage && (
-          <div className="bg-[#222] p-2 text-center text-xs font-bold text-[#d1a153] border-b border-gray-800">
-            {statusMessage}
-          </div>
-        )}
+        <div className="bg-[#222] p-2 text-center text-xs font-bold text-[#d1a153] border-b border-gray-800">
+          {statusMsg}
+        </div>
 
         <div className="border-b border-gray-800 p-4 bg-[#161616]">
           <label className="mb-2 block text-xs font-bold uppercase text-gray-400">Seleção / Equipa</label>
