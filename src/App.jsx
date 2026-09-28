@@ -116,14 +116,20 @@ export default function App() {
 
   const DARK_RED = '#5A1624';
 
-  // Emblema Oficial da FPF corrigido com link direto e seguro
+  // Emblema Oficial FPF Desenhado em Vetor Inline Puro (Zero erros de carregamento)
   const FPFEmissionBadge = () => (
-    <div className="flex items-center justify-center bg-[#8a152e] border-2 border-[#d1a153] rounded-lg p-1.5 h-12 w-12 shadow-xl shrink-0 overflow-hidden">
-      <img 
-        src="https://upload.wikimedia.org/wikipedia/commons/1/18/Logo_FPF_2021.svg" 
-        alt="FPF Logo" 
-        className="h-full w-full object-contain filter drop-shadow"
-      />
+    <div className="flex flex-col items-center justify-center bg-gradient-to-b from-[#8a152e] to-[#4a0a16] border-2 border-[#d1a153] rounded-xl px-2.5 py-1.5 shadow-xl shrink-0 select-none">
+      <div className="flex items-center gap-1">
+        <svg className="w-4 h-4 text-[#d1a153]" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        <span className="text-[13px] font-black tracking-wider text-[#d1a153] leading-none">FPF</span>
+      </div>
+      <div className="flex gap-1 mt-1">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-sm"></span>
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-sm"></span>
+        <span className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-sm"></span>
+      </div>
     </div>
   );
 
