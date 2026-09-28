@@ -340,20 +340,23 @@ export default function App() {
     return (
       <div className="flex h-screen w-screen flex-col bg-[#111] text-white">
         <header className="flex items-center justify-between border-b border-gray-800 bg-[#161616] px-8 py-4">
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-xl font-black uppercase text-[#d1a153]">{liveSession?.name || 'GYM FLOOR STANDBY'}</h1>
-              <span className="bg-[#8a152e] text-white text-[10px] font-black uppercase px-2 py-0.5 rounded">
-                {isCircuit ? '🔄 Treino em Circuito' : '⚡ Treino Linear / Supersérie'}
-              </span>
-            </div>
-            <div className="flex items-center gap-4 mt-1">
-              <p className="text-xs uppercase text-gray-400">{liveSession && liveSession.teamName}</p>
-              {isCircuit && (
-                <p className="text-xs font-bold text-[#d1a153]">
-                  {liveSession.circuitSets} Voltas ao Circuito · {liveSession.transitionRest}s Transição · {liveSession.circuitRest}s Fim de Volta
-                </p>
-              )}
+          <div className="flex items-center gap-4">
+            <img src={FPF_LOGO} alt="FPF" className="h-10 w-10 object-contain drop-shadow" />
+            <div>
+              <div className="flex items-center gap-3">
+                <h1 className="text-xl font-black uppercase text-[#d1a153]">{liveSession?.name || 'GYM FLOOR STANDBY'}</h1>
+                <span className="bg-[#8a152e] text-white text-[10px] font-black uppercase px-2 py-0.5 rounded">
+                  {isCircuit ? '🔄 Treino em Circuito' : '⚡ Treino Linear / Supersérie'}
+                </span>
+              </div>
+              <div className="flex items-center gap-4 mt-0.5">
+                <p className="text-xs uppercase text-gray-400">{liveSession && liveSession.teamName}</p>
+                {isCircuit && (
+                  <p className="text-xs font-bold text-[#d1a153]">
+                    {liveSession.circuitSets} Voltas · {liveSession.transitionRest}s Transição · {liveSession.circuitRest}s Fim de Volta
+                  </p>
+                )}
+              </div>
             </div>
           </div>
           <button onClick={() => setActiveTab('live')} className="rounded border border-gray-600 bg-gray-800 px-5 py-2 font-bold uppercase hover:bg-gray-700">
@@ -372,7 +375,6 @@ export default function App() {
                 const routine = variation.routine;
                 
                 if (isCircuit) {
-                  // Renderização otimizada para Circuito
                   return (
                     <div key={variation.id} className="flex flex-col gap-3 overflow-y-auto bg-[#181818] p-4 border border-gray-800 rounded-lg">
                       <h3 className="text-center text-lg font-black uppercase text-[#d1a153]">{variation.name} (Circuito)</h3>
@@ -386,7 +388,7 @@ export default function App() {
                             <div className="flex-1 min-w-0">
                               <h4 className="font-bold text-white uppercase text-sm truncate">{item.name}</h4>
                               <p className="text-xs text-gray-300 mt-0.5 font-semibold">
-                                Estação por Reps/Tempo: <span className="text-[#d1a153]">{item.reps}</span>
+                                Estação: <span className="text-[#d1a153]">{item.reps}</span>
                               </p>
                               {item.notes && <p className="text-[11px] text-yellow-500/90 mt-1 font-medium">{item.notes}</p>}
                             </div>
@@ -397,7 +399,6 @@ export default function App() {
                   );
                 }
 
-                // Renderização para Linear e Superséries
                 const blocks = [];
                 let currentBlock = [];
                 routine.forEach((item, idx) => {
@@ -567,7 +568,6 @@ export default function App() {
                 </label>
               </div>
 
-              {/* Parâmetros específicos se for Circuito */}
               {newTrainingType === 'circuit' && (
                 <div className="grid grid-cols-3 gap-3 bg-[#1e1e1e] p-4 border border-[#d1a153]/30 rounded">
                   <label className="text-xs font-bold text-gray-300">
