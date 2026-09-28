@@ -116,22 +116,14 @@ export default function App() {
 
   const DARK_RED = '#5A1624';
 
-  // Emblema Oficial da FPF em SVG Vetorial Autêntico (Formato de Escudo Institucional Português)
+  // Emblema Oficial Exato da Federação Portuguesa de Futebol (FPF)
   const FPFEmissionBadge = () => (
-    <div className="flex items-center justify-center bg-[#8a152e] border-2 border-[#d1a153] rounded-lg p-1 shadow-xl shrink-0 w-12 h-12">
-      <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Fundo do Escudo Estilo FPF */}
-        <path d="M50 4C30 4 10 14 10 38C10 65 35 88 50 96C65 88 90 65 90 38C90 14 70 4 50 4Z" fill="#6B1022" stroke="#d1a153" strokeWidth="5"/>
-        {/* Esfera Armilar / Detalhe Central Estilizado */}
-        <circle cx="50" cy="42" r="22" stroke="#d1a153" strokeWidth="3" fill="#8a152e"/>
-        <path d="M28 42H72M50 20V64" stroke="#d1a153" strokeWidth="2.5"/>
-        {/* Letras FPF */}
-        <text x="50" y="49" textAnchor="middle" fill="#ffffff" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="15" letterSpacing="0.5">FPF</text>
-        {/* As Quinas / Cores de Portugal na base */}
-        <rect x="34" y="68" width="10" height="10" rx="2" fill="#15803d"/>
-        <rect x="45" y="68" width="10" height="10" rx="2" fill="#facc15"/>
-        <rect x="56" y="68" width="10" height="10" rx="2" fill="#dc2626"/>
-      </svg>
+    <div className="flex items-center justify-center bg-[#8a152e] border-2 border-[#d1a153] rounded-lg p-1 h-12 w-12 shadow-xl shrink-0 overflow-hidden">
+      <img 
+        src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 500'><path d='M250 20C140 20 50 70 50 200c0 150 100 240 200 280 100-40 200-130 200-280C450 70 360 20 250 20z' fill='%23701022' stroke='%23d1a153' stroke-width='20'/><text x='250' y='220' text-anchor='middle' fill='%23d1a153' font-family='Arial, sans-serif' font-weight='900' font-size='130'>FPF</text><circle cx='250' cy='340' r='55' fill='none' stroke='%23d1a153' stroke-width='14'/><circle cx='200' cy='340' r='14' fill='%2316a34a'/><circle cx='250' cy='340' r='14' fill='%23facc15'/><circle cx='300' cy='340' r='14' fill='%23dc2626'/></svg>" 
+        alt="FPF Logo" 
+        className="h-full w-full object-contain"
+      />
     </div>
   );
 
