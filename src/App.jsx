@@ -116,10 +116,11 @@ export default function App() {
 
   const DARK_RED = '#5A1624';
 
-  // Componente de Emblema Oficial FPF (Garantido sem erros de link externo)
+  // Emblema tipográfico institucional puro (Sem erros de imagem)
   const FPFEmissionBadge = () => (
-    <div className="flex items-center justify-center bg-[#8a152e] border-2 border-[#d1a153] rounded-full h-12 w-12 shadow-lg shrink-0">
-      <span className="text-[11px] font-black tracking-tighter text-[#d1a153]">FPF</span>
+    <div className="flex flex-col items-center justify-center bg-gradient-to-b from-[#8a152e] to-[#5A1624] border-2 border-[#d1a153] rounded-xl px-3 py-1.5 shadow-xl shrink-0">
+      <span className="text-[14px] font-black tracking-widest text-[#d1a153] leading-none">FPF</span>
+      <span className="text-[8px] font-bold text-white uppercase tracking-tighter mt-0.5">PORTUGAL</span>
     </div>
   );
 
