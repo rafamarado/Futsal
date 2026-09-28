@@ -116,20 +116,17 @@ export default function App() {
 
   const DARK_RED = '#5A1624';
 
-  // Emblema Oficial FPF Desenhado em Vetor Inline Puro (Zero erros de carregamento)
+  // Emblema Oficial FPF em Vetor SVG Inline Integrado (Sem dependências externas nem erros)
   const FPFEmissionBadge = () => (
-    <div className="flex flex-col items-center justify-center bg-gradient-to-b from-[#8a152e] to-[#4a0a16] border-2 border-[#d1a153] rounded-xl px-2.5 py-1.5 shadow-xl shrink-0 select-none">
-      <div className="flex items-center gap-1">
-        <svg className="w-4 h-4 text-[#d1a153]" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-        <span className="text-[13px] font-black tracking-wider text-[#d1a153] leading-none">FPF</span>
-      </div>
-      <div className="flex gap-1 mt-1">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-sm"></span>
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-sm"></span>
-        <span className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-sm"></span>
-      </div>
+    <div className="flex items-center justify-center bg-gradient-to-b from-[#8a152e] to-[#420a14] border-2 border-[#d1a153] rounded-xl p-1.5 shadow-xl shrink-0 w-12 h-12">
+      <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 5C30 5 15 15 15 35C15 65 50 95 50 95C50 95 85 65 85 35C85 15 70 5 50 5Z" fill="#701022" stroke="#d1a153" strokeWidth="6"/>
+        <path d="M50 15C35 15 25 23 25 38C25 58 50 80 50 80C50 80 75 58 75 38C75 23 65 15 50 15Z" fill="#520b18" stroke="#d1a153" strokeWidth="3"/>
+        <text x="50" y="44" textAnchor="middle" fill="#d1a153" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="26" letterSpacing="1">FPF</text>
+        <circle cx="50" cy="62" r="6" fill="#16a34a"/>
+        <circle cx="35" cy="62" r="4.5" fill="#eab308"/>
+        <circle cx="65" cy="62" r="4.5" fill="#dc2626"/>
+      </svg>
     </div>
   );
 
