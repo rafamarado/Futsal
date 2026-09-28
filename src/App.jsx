@@ -116,18 +116,13 @@ export default function App() {
 
   const DARK_RED = '#5A1624';
 
-  // Emblema Gráfico Oficial FPF (Versão Escudo e Esferas Armilar estilizadíssima em Vetor Puro)
+  // Emblema Oficial Direto FPF
   const FPFEmissionBadge = () => (
-    <div className="relative flex items-center justify-center bg-gradient-to-b from-[#8a152e] to-[#45101b] border-2 border-[#d1a153] rounded-lg h-12 w-12 shadow-xl shrink-0 overflow-hidden">
-      <div className="absolute inset-0 border border-[#d1a153]/40 m-0.5 rounded-md flex flex-col items-center justify-center">
-        <span className="text-[11px] font-black tracking-tighter text-[#d1a153]">FPF</span>
-        <div className="flex gap-0.5 mt-0.5">
-          <div className="w-1 h-1 rounded-full bg-emerald-600"></div>
-          <div className="w-1 h-1 rounded-full bg-yellow-500"></div>
-          <div className="w-1 h-1 rounded-full bg-red-600"></div>
-        </div>
-      </div>
-    </div>
+    <img 
+      src="https://upload.wikimedia.org/wikipedia/commons/1/18/Logo_FPF_2021.svg" 
+      alt="FPF Logo" 
+      className="h-12 w-12 object-contain"
+    />
   );
 
   useEffect(() => {
