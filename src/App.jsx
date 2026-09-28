@@ -6,6 +6,12 @@ import {
   signOut,
   onAuthStateChanged
 } from 'firebase/auth';
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  onSnapshot
+} from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: "AIzaSyD0mszBLJTUUjmES4628snmfeFdeqJglP0",
@@ -18,11 +24,13 @@ const firebaseConfig = {
 };
 
 let auth = null;
+let db = null;
 try {
   const app = initializeApp(firebaseConfig);
   auth = getAuth(app);
+  db = getFirestore(app, '(default)');
 } catch (e) {
-  console.warn("Firebase não inicializado.");
+  console.warn("Erro ao iniciar Firebase:", e);
 }
 
 const EQUIPAS_INICIAIS = [
@@ -43,10 +51,6 @@ const SESSOES_INICIAIS = [
     id: 's1',
     teamId: 't1',
     name: 'Ativação & Força Máxima (-2)',
-    trainingType: 'linear', 
-    circuitSets: 3,
-    transitionRest: 15,
-    circuitRest: 90,
     variations: [
       {
         id: 'v1',
@@ -66,45 +70,40 @@ function criarItemRotina(exerciseId = '') {
   return { exerciseId, sets: 3, reps: '10', rest: 60, notes: '', isSuperset: false };
 }
 
+function getSupersetGroupIds(routine) {
+  const groupIds = Array(routine.length).fill(null);
+  let nextGroupId = 0;
+  for (let index = 0; index < routine.length - 1; index += 1) {
+    if (!routine[index].isSuperset) continue;
+    let groupId = groupIds[index];
+    if (groupId === null) {
+      groupId = groupIds[index - 1] ?? nextGroupId + 1;
+      nextGroupId = Math.max(nextGroupId, groupId);
+    }
+    groupIds[index] = groupId;
+    groupIds[index + 1] = groupId;
+  }
+  return groupIds;
+}
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [statusMsg, setStatusMsg] = useState('⚡ Sistema Pronto');
+  const [statusMessage, setStatusMessage] = useState('');
 
   const [activeTab, setActiveTab] = useState('live');
   const [teams, setTeams] = useState(EQUIPAS_INICIAIS);
-  
-  const [exercises, setExercises] = useState(() => {
-    try {
-      const saved = localStorage.getItem('futsal_exercises_v3');
-      return saved ? JSON.parse(saved) : EXERCICIOS_INICIAIS;
-    } catch {
-      return EXERCICIOS_INICIAIS;
-    }
-  });
-
-  const [sessions, setSessions] = useState(() => {
-    try {
-      const saved = localStorage.getItem('futsal_sessions_v3');
-      return saved ? JSON.parse(saved) : SESSOES_INICIAIS;
-    } catch {
-      return SESSOES_INICIAIS;
-    }
-  });
-
+  const [exercises, setExercises] = useState(EXERCICIOS_INICIAIS);
+  const [sessions, setSessions] = useState(SESSOES_INICIAIS);
   const [liveSession, setLiveSession] = useState(null);
+
   const [activeTeamId, setActiveTeamId] = useState(EQUIPAS_INICIAIS[0].id);
   const activeTeam = teams.find((t) => t.id === activeTeamId) || teams[0];
 
   const [newSessionName, setNewSessionName] = useState('');
-  const [newTrainingType, setNewTrainingType] = useState('linear');
-  const [circuitSets, setCircuitSets] = useState(3);
-  const [transitionRest, setTransitionRest] = useState(15);
-  const [circuitRest, setCircuitRest] = useState(90);
-
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [variations, setVariations] = useState([
     { id: 'v1', name: 'Versão V1', routine: [criarItemRotina(EXERCICIOS_INICIAIS[0].id)] }
@@ -114,22 +113,8 @@ export default function App() {
   const [newExUrl, setNewExUrl] = useState('');
   const [editingExerciseId, setEditingExerciseId] = useState(null);
 
+  const FPF_LOGO = 'https://logodownload.org/wp-content/uploads/2021/10/fpf-selecao-de-portugal-logo-4.png';
   const DARK_RED = '#5A1624';
-
-  // Emblema Oficial FPF em Vetor Inline Exato (Garantido a 100% sem erros de carregamento externo)
-  const FPFEmissionBadge = () => (
-    <div className="flex items-center justify-center bg-[#781022] border-2 border-[#d1a153] rounded-md px-1 py-1 shadow-xl shrink-0 w-12 h-12">
-      <svg viewBox="0 0 175 68" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="175" height="68" rx="8" fill="#781022"/>
-        {/* Tipografia Oficial FPF Estilizada */}
-        <text x="14" y="48" fill="#d1a153" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="38" letterSpacing="-1">FPF</text>
-        {/* Detalhes de Esfera/Cores Oficiais no canto direito */}
-        <circle cx="152" cy="22" r="5" fill="#eab308"/>
-        <circle cx="138" cy="48" r="5" fill="#16a34a"/>
-        <circle cx="156" cy="48" r="5" fill="#dc2626"/>
-      </svg>
-    </div>
-  );
 
   useEffect(() => {
     if (!auth) {
@@ -144,20 +129,62 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('futsal_exercises_v3', JSON.stringify(exercises));
-    } catch (e) {
-      console.error(e);
+    if (!db) {
+      setStatusMessage('⚠️ Base de dados não inicializada.');
+      return;
     }
-  }, [exercises]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('futsal_sessions_v3', JSON.stringify(sessions));
-    } catch (e) {
-      console.error(e);
+    const unsubExercises = onSnapshot(doc(db, 'futsal_hub', 'exercises'), (docSnap) => {
+      if (docSnap.exists() && docSnap.data().list) {
+        setExercises(docSnap.data().list);
+      }
+    }, (err) => {
+      console.warn("Erro ao ler exercícios do Firestore:", err);
+      setStatusMessage('❌ Erro de permissão/leitura no Firestore.');
+    });
+
+    const unsubSessions = onSnapshot(doc(db, 'futsal_hub', 'sessions'), (docSnap) => {
+      if (docSnap.exists() && docSnap.data().list) {
+        setSessions(docSnap.data().list);
+      }
+    }, (err) => {
+      console.warn("Erro ao ler sessões do Firestore:", err);
+      setStatusMessage('❌ Erro de permissão/leitura no Firestore.');
+    });
+
+    return () => {
+      unsubExercises();
+      unsubSessions();
+    };
+  }, []);
+
+  const saveExercisesToCloud = async (newExercises) => {
+    setExercises(newExercises);
+    if (db) {
+      try {
+        await setDoc(doc(db, 'futsal_hub', 'exercises'), { list: newExercises });
+        setStatusMessage('✅ Exercícios guardados na cloud!');
+        setTimeout(() => setStatusMessage(''), 3000);
+      } catch (e) {
+        console.error("Erro ao guardar exercícios:", e);
+        setStatusMessage('❌ Erro ao gravar exercícios (ver consola).');
+      }
     }
-  }, [sessions]);
+  };
+
+  const saveSessionsToCloud = async (newSessions) => {
+    setSessions(newSessions);
+    if (db) {
+      try {
+        await setDoc(doc(db, 'futsal_hub', 'sessions'), { list: newSessions });
+        setStatusMessage('✅ Sessão guardada na cloud!');
+        setTimeout(() => setStatusMessage(''), 3000);
+      } catch (e) {
+        console.error("Erro ao guardar sessões:", e);
+        setStatusMessage('❌ Erro ao gravar sessão (verifique as Regras).');
+      }
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -189,9 +216,7 @@ export default function App() {
   if (!user) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-[#121212] font-sans text-white relative overflow-hidden" style={{ backgroundColor: DARK_RED }}>
-        <div className="absolute opacity-10 blur-sm pointer-events-none flex items-center justify-center h-48 w-48 rounded-full border-4 border-[#d1a153]">
-          <span className="text-6xl font-black text-[#d1a153]">FPF</span>
-        </div>
+        <img src={FPF_LOGO} alt="Watermark" className="absolute opacity-10 blur-sm pointer-events-none" style={{ width: '80vh' }} />
         <div className="relative z-10 w-full max-w-md rounded-xl bg-[#1a1a1a]/90 p-8 shadow-2xl border border-[#d1a153]/30 backdrop-blur">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-black uppercase tracking-wider text-[#d1a153]">Futsal Training Hub</h1>
@@ -241,10 +266,6 @@ export default function App() {
 
   const resetSessionForm = () => {
     setNewSessionName('');
-    setNewTrainingType('linear');
-    setCircuitSets(3);
-    setTransitionRest(15);
-    setCircuitRest(90);
     setEditingSessionId(null);
     setVariations([{ id: `v-${Date.now()}`, name: 'Versão V1', routine: [criarItemRotina(exercises[0]?.id || '')] }]);
   };
@@ -261,16 +282,15 @@ export default function App() {
       ? exercises.map(item => item.id === editingExerciseId ? exercise : item) 
       : [...exercises, exercise];
     
-    setExercises(updated);
+    saveExercisesToCloud(updated);
     setNewExName('');
     setNewExUrl('');
     setEditingExerciseId(null);
-    setStatusMsg('💾 Exercício guardado!');
-    setTimeout(() => setStatusMsg('⚡ Sistema Pronto'), 2500);
   };
 
   const handleDeleteExercise = (exerciseId) => {
-    setExercises(exercises.filter(exercise => exercise.id !== exerciseId));
+    const updated = exercises.filter(exercise => exercise.id !== exerciseId);
+    saveExercisesToCloud(updated);
   };
 
   const handleAddVariation = () => {
@@ -297,10 +317,6 @@ export default function App() {
     setEditingSessionId(session.id);
     setActiveTeamId(session.teamId);
     setNewSessionName(session.name);
-    setNewTrainingType(session.trainingType || 'linear');
-    setCircuitSets(session.circuitSets || 3);
-    setTransitionRest(session.transitionRest || 15);
-    setCircuitRest(session.circuitRest || 90);
     setVariations(session.variations.map(v => ({ ...v, routine: v.routine.map(i => ({ ...i })) })));
     setActiveTab('builder');
   };
@@ -308,29 +324,19 @@ export default function App() {
   const handleSaveSession = (event) => {
     event.preventDefault();
     if (!newSessionName.trim()) return;
-    const session = { 
-      id: editingSessionId || Date.now().toString(), 
-      teamId: activeTeam.id, 
-      name: newSessionName.trim(), 
-      trainingType: newTrainingType,
-      circuitSets: Number(circuitSets),
-      transitionRest: Number(transitionRest),
-      circuitRest: Number(circuitRest),
-      variations 
-    };
-    const updated = editingSessionId 
+    const session = { id: editingSessionId || Date.now().toString(), teamId: activeTeam.id, name: newSessionName.trim(), variations };
+    const updated = editingExerciseId 
       ? sessions.map(s => s.id === editingSessionId ? session : s) 
       : [...sessions, session];
 
-    setSessions(updated);
+    saveSessionsToCloud(updated);
     resetSessionForm();
     setActiveTab('live');
-    setStatusMsg('💾 Sessão guardada!');
-    setTimeout(() => setStatusMsg('⚡ Sistema Pronto'), 2500);
   };
 
   const handleDeleteSession = (sessionId) => {
-    setSessions(sessions.filter(s => s.id !== sessionId));
+    const updated = sessions.filter(s => s.id !== sessionId);
+    saveSessionsToCloud(updated);
   };
 
   const castToTV = (session) => {
@@ -352,27 +358,14 @@ export default function App() {
   const teamSessions = sessions.filter(s => s.teamId === activeTeam.id);
 
   if (activeTab === 'tv_display') {
-    const isCircuit = liveSession?.trainingType === 'circuit';
     return (
       <div className="flex h-screen w-screen flex-col bg-[#111] text-white">
         <header className="flex items-center justify-between border-b border-gray-800 bg-[#161616] px-8 py-4">
-          <div className="flex items-center gap-4">
-            <FPFEmissionBadge />
+          <div className="flex items-center gap-3">
+            <img src={FPF_LOGO} alt="FPF" className="h-9 w-9 object-contain" />
             <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-xl font-black uppercase text-[#d1a153]">{liveSession?.name || 'GYM FLOOR STANDBY'}</h1>
-                <span className="bg-[#8a152e] text-white text-[10px] font-black uppercase px-2 py-0.5 rounded">
-                  {isCircuit ? '🔄 Treino em Circuito' : '⚡ Treino Linear / Supersérie'}
-                </span>
-              </div>
-              <div className="flex items-center gap-4 mt-0.5">
-                <p className="text-xs uppercase text-gray-400">{liveSession && liveSession.teamName}</p>
-                {isCircuit && (
-                  <p className="text-xs font-bold text-[#d1a153]">
-                    {liveSession.circuitSets} Voltas · {liveSession.transitionRest}s Transição · {liveSession.circuitRest}s Fim de Volta
-                  </p>
-                )}
-              </div>
+              <h1 className="text-xl font-black uppercase text-[#d1a153]">{liveSession?.name || 'GYM FLOOR STANDBY'}</h1>
+              <p className="text-xs uppercase text-gray-400">{liveSession && liveSession.teamName}</p>
             </div>
           </div>
           <button onClick={() => setActiveTab('live')} className="rounded border border-gray-600 bg-gray-800 px-5 py-2 font-bold uppercase hover:bg-gray-700">
@@ -388,74 +381,29 @@ export default function App() {
           ) : (
             <div className="grid h-full w-full gap-5" style={{ gridTemplateColumns: `repeat(${liveSession.variations.length}, minmax(0, 1fr))` }}>
               {liveSession.variations.map((variation) => {
-                const routine = variation.routine;
-                
-                if (isCircuit) {
-                  return (
-                    <div key={variation.id} className="flex flex-col gap-3 overflow-y-auto bg-[#181818] p-4 border border-gray-800 rounded-lg">
-                      <h3 className="text-center text-lg font-black uppercase text-[#d1a153]">{variation.name} (Circuito)</h3>
-                      <div className="space-y-3">
-                        {routine.map((item, index) => (
-                          <article key={index} className="flex items-center gap-4 bg-[#222] p-3 rounded border border-gray-800">
-                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#8a152e] text-xs font-black text-white">
-                              {index + 1}
-                            </span>
-                            <img src={item.mediaUrl} alt={item.name} className="h-16 w-16 rounded object-cover border border-gray-700" />
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-bold text-white uppercase text-sm truncate">{item.name}</h4>
-                              <p className="text-xs text-gray-300 mt-0.5 font-semibold">
-                                Estação: <span className="text-[#d1a153]">{item.reps}</span>
-                              </p>
-                              {item.notes && <p className="text-[11px] text-yellow-500/90 mt-1 font-medium">{item.notes}</p>}
-                            </div>
-                          </article>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                }
-
-                const blocks = [];
-                let currentBlock = [];
-                routine.forEach((item, idx) => {
-                  currentBlock.item = currentBlock.item || [];
-                  currentBlock.push(item);
-                  if (!item.isSuperset || idx === routine.length - 1) {
-                    blocks.push([...currentBlock]);
-                    currentBlock = [];
-                  }
-                });
-
+                const groups = getSupersetGroupIds(variation.routine);
                 return (
-                  <div key={variation.id} className="flex flex-col gap-4 overflow-y-auto bg-[#181818] p-4 border border-gray-800 rounded-lg">
+                  <div key={variation.id} className="flex flex-col gap-4 overflow-y-auto bg-[#181818] p-4 border border-gray-800">
                     <h3 className="text-center text-lg font-black uppercase text-[#d1a153]">{variation.name}</h3>
-                    {blocks.map((block, bIdx) => {
-                      const isSupersetBlock = block.length > 1;
+                    {variation.routine.map((item, index) => {
+                      const groupId = groups[index];
                       return (
-                        <div key={bIdx} className={`p-3 rounded-lg border ${isSupersetBlock ? 'border-[#d1a153] bg-[#25221b]' : 'border-gray-800 bg-[#222]'}`}>
-                          {isSupersetBlock && (
-                            <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#d1a153]/30">
-                              <span className="text-xs font-black uppercase text-[#d1a153] tracking-wider">🔗 Bloco em Supersérie</span>
-                              <span className="text-xs font-bold text-gray-300">
-                                {block[0].sets} Séries · {block[0].rest}s Descanso Final
-                              </span>
+                        <article key={index} className={`flex items-center gap-4 overflow-hidden border-l-4 bg-[#222] p-4 rounded shadow-md ${groupId ? 'border-[#d1a153] bg-gradient-to-r from-[#d1a153]/10 to-transparent' : 'border-[#8a152e]'}`}>
+                          <img src={item.mediaUrl} alt={item.name} className="h-20 w-20 rounded-md object-cover border border-gray-700" />
+                          <div className="flex-1">
+                            <h4 className="font-bold text-white uppercase">{item.name}</h4>
+                            <p className="text-sm text-gray-400 mt-1">
+                              {item.sets} séries · {item.reps} reps · {item.rest}s descanso
+                            </p>
+                            {item.notes && <p className="text-xs text-yellow-500/80 mt-1">{item.notes}</p>}
+                          </div>
+                          {groupId && (
+                            <div className="flex flex-col items-center justify-center px-2">
+                              <span className="text-[10px] font-black uppercase text-[#d1a153]">Supersérie</span>
+                              <span className="text-xl">🔗</span>
                             </div>
                           )}
-                          <div className="space-y-3">
-                            {block.map((item, iIdx) => (
-                              <article key={iIdx} className="flex items-center gap-4 bg-[#1a1a1a] p-3 rounded border border-gray-800">
-                                <img src={item.mediaUrl} alt={item.name} className="h-16 w-16 rounded object-cover border border-gray-700" />
-                                <div className="flex-1 min-w-0">
-                                  <h4 className="font-bold text-white uppercase text-sm truncate">{item.name}</h4>
-                                  <p className="text-xs text-gray-400 mt-1">
-                                    {isSupersetBlock ? `${item.reps} reps` : `${item.sets} séries · ${item.reps} reps · ${item.rest}s descanso`}
-                                  </p>
-                                  {item.notes && <p className="text-[11px] text-yellow-500/90 mt-1 font-medium">{item.notes}</p>}
-                                </div>
-                              </article>
-                            ))}
-                          </div>
-                        </div>
+                        </article>
                       );
                     })}
                   </div>
@@ -472,13 +420,15 @@ export default function App() {
     <div className="flex h-screen w-screen overflow-hidden bg-[#121212] text-white">
       <aside className="flex w-72 flex-col border-r border-gray-800 bg-[#181818]">
         <div className="flex items-center gap-3 border-b border-gray-800 p-6">
-          <FPFEmissionBadge />
+          <img src={FPF_LOGO} alt="FPF" className="h-8 w-8 object-contain" />
           <h1 className="font-black tracking-wider text-[#d1a153]">Performance Hub</h1>
         </div>
 
-        <div className="bg-[#222] p-2 text-center text-xs font-bold text-[#d1a153] border-b border-gray-800">
-          {statusMsg}
-        </div>
+        {statusMessage && (
+          <div className="bg-[#222] p-2 text-center text-xs font-bold text-[#d1a153] border-b border-gray-800">
+            {statusMessage}
+          </div>
+        )}
 
         <div className="border-b border-gray-800 p-4 bg-[#161616]">
           <label className="mb-2 block text-xs font-bold uppercase text-gray-400">Seleção / Equipa</label>
@@ -545,13 +495,8 @@ export default function App() {
                 {teamSessions.map((session) => (
                   <article key={session.id} className="flex flex-wrap items-center justify-between gap-4 border border-gray-800 bg-[#1a1a1a] p-5">
                     <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="text-lg font-black uppercase">{session.name}</h4>
-                        <span className="text-[10px] bg-gray-800 text-gray-300 font-bold px-2 py-0.5 rounded uppercase">
-                          {session.trainingType === 'circuit' ? '🔄 Circuito' : '⚡ Linear'}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-400">{session.variations.length} variações</p>
+                      <h4 className="text-lg font-black uppercase">{session.name}</h4>
+                      <p className="mt-1 text-sm text-gray-400">{session.variations.length} variações</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <button onClick={() => handleEditSession(session)} className="bg-gray-700 px-3 py-2 text-sm font-bold hover:bg-gray-600">Editar</button>
@@ -569,37 +514,10 @@ export default function App() {
           <main className="max-w-6xl flex-1 p-8">
             <h3 className="mb-5 text-2xl font-black uppercase text-[#d1a153]">{editingSessionId ? 'Editar treino' : 'Criar treino'}</h3>
             <form onSubmit={handleSaveSession} className="space-y-6 border border-gray-800 bg-[#181818] p-6">
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className="block text-sm font-bold uppercase text-gray-400">
-                  Nome da sessão
-                  <input required value={newSessionName} onChange={(e) => setNewSessionName(e.target.value)} className="mt-2 w-full border border-gray-700 bg-[#111] p-3 text-white" placeholder="Ex: Força máxima" />
-                </label>
-                <label className="block text-sm font-bold uppercase text-gray-400">
-                  Tipo de Treino
-                  <select value={newTrainingType} onChange={(e) => setNewTrainingType(e.target.value)} className="mt-2 w-full border border-gray-700 bg-[#111] p-3 font-bold text-white">
-                    <option value="linear">⚡ Treino Linear / Convencional</option>
-                    <option value="circuit">🔄 Treino em Circuito / Estações</option>
-                  </select>
-                </label>
-              </div>
-
-              {newTrainingType === 'circuit' && (
-                <div className="grid grid-cols-3 gap-3 bg-[#1e1e1e] p-4 border border-[#d1a153]/30 rounded">
-                  <label className="text-xs font-bold text-gray-300">
-                    Nº de Voltas (Séries)
-                    <input type="number" min="1" value={circuitSets} onChange={(e) => setCircuitSets(e.target.value)} className="mt-1 w-full bg-[#111] border border-gray-700 p-2 text-white text-center font-bold" />
-                  </label>
-                  <label className="text-xs font-bold text-gray-300">
-                    Transição entre Estações (s)
-                    <input type="number" min="0" value={transitionRest} onChange={(e) => setTransitionRest(e.target.value)} className="mt-1 w-full bg-[#111] border border-gray-700 p-2 text-white text-center font-bold" />
-                  </label>
-                  <label className="text-xs font-bold text-gray-300">
-                    Descanso fim de volta (s)
-                    <input type="number" min="0" value={circuitRest} onChange={(e) => setCircuitRest(e.target.value)} className="mt-1 w-full bg-[#111] border border-gray-700 p-2 text-white text-center font-bold" />
-                  </label>
-                </div>
-              )}
+              <label className="block text-sm font-bold uppercase text-gray-400">
+                Nome da sessão
+                <input required value={newSessionName} onChange={(e) => setNewSessionName(e.target.value)} className="mt-2 w-full border border-gray-700 bg-[#111] p-3 text-white" placeholder="Ex: Força máxima" />
+              </label>
 
               <div className="flex items-center justify-between border-b border-gray-800 pb-3">
                 <h4 className="font-bold uppercase">Variações / grupos</h4>
@@ -614,52 +532,37 @@ export default function App() {
                       <input required value={variation.name} onChange={(e) => setVariations(variations.map((v, i) => i === vIdx ? { ...v, name: e.target.value } : v))} className="mt-2 w-full border border-gray-600 bg-[#111] p-2 text-base text-white" />
                     </label>
 
-                    {variation.routine.map((item, itemIdx) => {
-                      const isLinkedToNext = item.isSuperset;
-                      return (
-                        <div key={itemIdx} className={`space-y-3 border-l-4 ${isLinkedToNext && newTrainingType === 'linear' ? 'border-[#d1a153] bg-[#222019]' : 'border-gray-600'} bg-[#181818] p-3 rounded`}>
-                          <div className="flex items-center justify-between gap-2">
-                            <strong className="text-xs uppercase text-gray-300">
-                              {newTrainingType === 'circuit' ? `Estação ${itemIdx + 1}` : `Exercício ${itemIdx + 1}`}
-                            </strong>
-                            {variation.routine.length > 1 && (
-                              <button type="button" onClick={() => handleRemoveRoutineItem(vIdx, itemIdx)} className="px-2 font-bold text-red-400">✕</button>
-                            )}
-                          </div>
-                          <select value={item.exerciseId} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'exerciseId', e.target.value)} className="w-full border border-gray-600 bg-[#222] p-2 text-sm text-white">
-                            {exercises.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
-                          </select>
-
-                          {newTrainingType === 'linear' ? (
-                            <div className="grid grid-cols-3 gap-2">
-                              <label className="text-xs text-gray-400">Séries <input type="number" min="1" value={item.sets} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'sets', Number(e.target.value))} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
-                              <label className="text-xs text-gray-400">Reps <input value={item.reps} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'reps', e.target.value)} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
-                              <label className="text-xs text-gray-400">Descanso (s) <input type="number" min="0" value={item.rest} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'rest', Number(e.target.value))} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
-                            </div>
-                          ) : (
-                            <div className="grid grid-cols-2 gap-2">
-                              <label className="text-xs text-gray-400">Repetições / Tempo (Estação) <input value={item.reps} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'reps', e.target.value)} placeholder="Ex: 12 reps ou 30s" className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
-                              <label className="text-xs text-gray-400">Notas específicas <input value={item.notes} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'notes', e.target.value)} placeholder="Opcional" className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-white" /></label>
-                            </div>
-                          )}
-                          
-                          {newTrainingType === 'linear' && (
-                            <div className="mt-2 flex items-center gap-2 border-t border-gray-700 pt-2">
-                              <input 
-                                type="checkbox" 
-                                checked={item.isSuperset || false} 
-                                onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'isSuperset', e.target.checked)} 
-                                className="h-4 w-4 accent-[#d1a153]" 
-                              />
-                              <label className="text-xs font-bold uppercase text-[#d1a153] cursor-pointer" onClick={() => handleUpdateRoutineItem(vIdx, itemIdx, 'isSuperset', !item.isSuperset)}>
-                                🔗 Ligar ao próximo em Supersérie (Sem descanso intermédio)
-                              </label>
-                            </div>
+                    {variation.routine.map((item, itemIdx) => (
+                      <div key={itemIdx} className={`space-y-3 border-l-4 ${item.isSuperset ? 'border-[#d1a153]' : 'border-gray-600'} bg-[#181818] p-3`}>
+                        <div className="flex items-center justify-between gap-2">
+                          <strong className="text-xs uppercase text-gray-300">Exercício {itemIdx + 1}</strong>
+                          {variation.routine.length > 1 && (
+                            <button type="button" onClick={() => handleRemoveRoutineItem(vIdx, itemIdx)} className="px-2 font-bold text-red-400">✕</button>
                           )}
                         </div>
-                      );
-                    })}
-                    <button type="button" onClick={() => handleAddExerciseToVariation(vIdx)} className="w-full bg-gray-700 py-2 text-sm font-bold uppercase hover:bg-gray-600">+ Adicionar {newTrainingType === 'circuit' ? 'Estação' : 'Exercício'}</button>
+                        <select value={item.exerciseId} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'exerciseId', e.target.value)} className="w-full border border-gray-600 bg-[#222] p-2 text-sm text-white">
+                          {exercises.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
+                        </select>
+                        <div className="grid grid-cols-3 gap-2">
+                          <label className="text-xs text-gray-400">Séries <input type="number" min="1" value={item.sets} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'sets', Number(e.target.value))} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
+                          <label className="text-xs text-gray-400">Reps <input value={item.reps} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'reps', e.target.value)} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
+                          <label className="text-xs text-gray-400">Descanso (s) <input type="number" min="0" value={item.rest} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'rest', Number(e.target.value))} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
+                        </div>
+                        
+                        <div className="mt-2 flex items-center gap-2 border-t border-gray-700 pt-2">
+                          <input 
+                            type="checkbox" 
+                            checked={item.isSuperset || false} 
+                            onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'isSuperset', e.target.checked)} 
+                            className="h-4 w-4 accent-[#d1a153]" 
+                          />
+                          <label className="text-xs font-bold uppercase text-[#d1a153] cursor-pointer" onClick={() => handleUpdateRoutineItem(vIdx, itemIdx, 'isSuperset', !item.isSuperset)}>
+                            Ligar ao próximo exercício (Supersérie)
+                          </label>
+                        </div>
+                      </div>
+                    ))}
+                    <button type="button" onClick={() => handleAddExerciseToVariation(vIdx)} className="w-full bg-gray-700 py-2 text-sm font-bold uppercase hover:bg-gray-600">+ Adicionar exercício</button>
                   </section>
                 ))}
               </div>
