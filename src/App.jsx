@@ -116,16 +116,21 @@ export default function App() {
 
   const DARK_RED = '#5A1624';
 
-  // Emblema Oficial FPF em Vetor SVG Inline Integrado (Sem dependências externas nem erros)
+  // Emblema Oficial da FPF em SVG Vetorial Autêntico (Formato de Escudo Institucional Português)
   const FPFEmissionBadge = () => (
-    <div className="flex items-center justify-center bg-gradient-to-b from-[#8a152e] to-[#420a14] border-2 border-[#d1a153] rounded-xl p-1.5 shadow-xl shrink-0 w-12 h-12">
+    <div className="flex items-center justify-center bg-[#8a152e] border-2 border-[#d1a153] rounded-lg p-1 shadow-xl shrink-0 w-12 h-12">
       <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M50 5C30 5 15 15 15 35C15 65 50 95 50 95C50 95 85 65 85 35C85 15 70 5 50 5Z" fill="#701022" stroke="#d1a153" strokeWidth="6"/>
-        <path d="M50 15C35 15 25 23 25 38C25 58 50 80 50 80C50 80 75 58 75 38C75 23 65 15 50 15Z" fill="#520b18" stroke="#d1a153" strokeWidth="3"/>
-        <text x="50" y="44" textAnchor="middle" fill="#d1a153" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="26" letterSpacing="1">FPF</text>
-        <circle cx="50" cy="62" r="6" fill="#16a34a"/>
-        <circle cx="35" cy="62" r="4.5" fill="#eab308"/>
-        <circle cx="65" cy="62" r="4.5" fill="#dc2626"/>
+        {/* Fundo do Escudo Estilo FPF */}
+        <path d="M50 4C30 4 10 14 10 38C10 65 35 88 50 96C65 88 90 65 90 38C90 14 70 4 50 4Z" fill="#6B1022" stroke="#d1a153" strokeWidth="5"/>
+        {/* Esfera Armilar / Detalhe Central Estilizado */}
+        <circle cx="50" cy="42" r="22" stroke="#d1a153" strokeWidth="3" fill="#8a152e"/>
+        <path d="M28 42H72M50 20V64" stroke="#d1a153" strokeWidth="2.5"/>
+        {/* Letras FPF */}
+        <text x="50" y="49" textAnchor="middle" fill="#ffffff" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="15" letterSpacing="0.5">FPF</text>
+        {/* As Quinas / Cores de Portugal na base */}
+        <rect x="34" y="68" width="10" height="10" rx="2" fill="#15803d"/>
+        <rect x="45" y="68" width="10" height="10" rx="2" fill="#facc15"/>
+        <rect x="56" y="68" width="10" height="10" rx="2" fill="#dc2626"/>
       </svg>
     </div>
   );
