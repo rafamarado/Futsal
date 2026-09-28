@@ -127,6 +127,47 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
+  // Sincronização em tempo real com o Firestore
+  useEffect(() => {
+    if (!db) return;
+    const unsubExercises = onSnapshot(doc(db, 'futsal_hub', 'exercises'), (docSnap) => {
+      if (docSnap.exists() && docSnap.data().list) {
+        setExercises(docSnap.data().list);
+      }
+    });
+    const unsubSessions = onSnapshot(doc(db, 'futsal_hub', 'sessions'), (docSnap) => {
+      if (docSnap.exists() && docSnap.data().list) {
+        setSessions(docSnap.data().list);
+      }
+    });
+    return () => {
+      unsubExercises();
+      unsubSessions();
+    };
+  }, []);
+
+  const saveExercisesToCloud = async (newExercises) => {
+    setExercises(newExercises);
+    if (db) {
+      try {
+        await setDoc(doc(db, 'futsal_hub', 'exercises'), { list: newExercises });
+      } catch (e) {
+        console.error("Erro ao guardar exercícios:", e);
+      }
+    }
+  };
+
+  const saveSessionsToCloud = async (newSessions) => {
+    setSessions(newSessions);
+    if (db) {
+      try {
+        await setDoc(doc(db, 'futsal_hub', 'sessions'), { list: newSessions });
+      } catch (e) {
+        console.error("Erro ao guardar sessões:", e);
+      }
+    }
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
@@ -219,14 +260,19 @@ export default function App() {
       name: newExName.trim(),
       mediaUrl: newExUrl.trim() || IMAGEM_PADRAO
     };
-    setExercises(editingExerciseId ? exercises.map(item => item.id === editingExerciseId ? exercise : item) : [...exercises, exercise]);
+    const updated = editingExerciseId 
+      ? exercises.map(item => item.id === editingExerciseId ? exercise : item) 
+      : [...exercises, exercise];
+    
+    saveExercisesToCloud(updated);
     setNewExName('');
     setNewExUrl('');
     setEditingExerciseId(null);
   };
 
   const handleDeleteExercise = (exerciseId) => {
-    setExercises(exercises.filter(exercise => exercise.id !== exerciseId));
+    const updated = exercises.filter(exercise => exercise.id !== exerciseId);
+    saveExercisesToCloud(updated);
   };
 
   const handleAddVariation = () => {
@@ -261,13 +307,18 @@ export default function App() {
     event.preventDefault();
     if (!newSessionName.trim()) return;
     const session = { id: editingSessionId || Date.now().toString(), teamId: activeTeam.id, name: newSessionName.trim(), variations };
-    setSessions(editingSessionId ? sessions.map(s => s.id === editingSessionId ? session : s) : [...sessions, session]);
+    const updated = editingSessionId 
+      ? sessions.map(s => s.id === editingSessionId ? session : s) 
+      : [...sessions, session];
+
+    saveSessionsToCloud(updated);
     resetSessionForm();
     setActiveTab('live');
   };
 
   const handleDeleteSession = (sessionId) => {
-    setSessions(sessions.filter(s => s.id !== sessionId));
+    const updated = sessions.filter(s => s.id !== sessionId);
+    saveSessionsToCloud(updated);
   };
 
   const castToTV = (session) => {
