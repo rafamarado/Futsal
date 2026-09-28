@@ -114,7 +114,7 @@ export default function App() {
   const [newExUrl, setNewExUrl] = useState('');
   const [editingExerciseId, setEditingExerciseId] = useState(null);
 
-  const FPF_LOGO = 'https://logodownload.org/wp-content/uploads/2021/10/fpf-selecao-de-portugal-logo-4.png';
+  const FPF_LOGO = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Logo_FPF_2021.svg/512px-Logo_FPF_2021.svg.png';
   const DARK_RED = '#5A1624';
 
   useEffect(() => {
@@ -341,7 +341,7 @@ export default function App() {
       <div className="flex h-screen w-screen flex-col bg-[#111] text-white">
         <header className="flex items-center justify-between border-b border-gray-800 bg-[#161616] px-8 py-4">
           <div className="flex items-center gap-4">
-            <img src={FPF_LOGO} alt="FPF" className="h-10 w-10 object-contain drop-shadow" />
+            <img src={FPF_LOGO} alt="FPF" className="h-12 w-12 object-contain" />
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-xl font-black uppercase text-[#d1a153]">{liveSession?.name || 'GYM FLOOR STANDBY'}</h1>
