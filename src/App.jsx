@@ -116,13 +116,13 @@ export default function App() {
 
   const DARK_RED = '#5A1624';
 
-  // Emblema Oficial FPF (Versão Imagem PNG Direta de Alta Qualidade)
+  // Emblema Oficial da FPF corrigido com link direto e seguro
   const FPFEmissionBadge = () => (
     <div className="flex items-center justify-center bg-[#8a152e] border-2 border-[#d1a153] rounded-lg p-1.5 h-12 w-12 shadow-xl shrink-0 overflow-hidden">
       <img 
-        src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Logo_FPF_2021.svg/512px-Logo_FPF_2021.svg.png" 
+        src="https://upload.wikimedia.org/wikipedia/commons/1/18/Logo_FPF_2021.svg" 
         alt="FPF Logo" 
-        className="h-full w-full object-contain"
+        className="h-full w-full object-contain filter drop-shadow"
       />
     </div>
   );
