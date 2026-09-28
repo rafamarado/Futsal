@@ -318,7 +318,8 @@ export default function App() {
                     {variation.routine.map((item, index) => {
                       const groupId = groups[index];
                       return (
-                        <article key={index} className={`flex overflow-hidden border-l-4 bg-[#222] p-4 rounded ${groupId ? 'border-[#d1a153]' : 'border-[#8a152e]'}`}>
+                        <article key={index} className={`flex items-center gap-4 overflow-hidden border-l-4 bg-[#222] p-4 rounded shadow-md ${groupId ? 'border-[#d1a153] bg-gradient-to-r from-[#d1a153]/10 to-transparent' : 'border-[#8a152e]'}`}>
+                          <img src={item.mediaUrl} alt={item.name} className="h-20 w-20 rounded-md object-cover border border-gray-700" />
                           <div className="flex-1">
                             <h4 className="font-bold text-white uppercase">{item.name}</h4>
                             <p className="text-sm text-gray-400 mt-1">
@@ -326,6 +327,12 @@ export default function App() {
                             </p>
                             {item.notes && <p className="text-xs text-yellow-500/80 mt-1">{item.notes}</p>}
                           </div>
+                          {groupId && (
+                            <div className="flex flex-col items-center justify-center px-2">
+                              <span className="text-[10px] font-black uppercase text-[#d1a153]">Supersérie</span>
+                              <span className="text-xl">🔗</span>
+                            </div>
+                          )}
                         </article>
                       );
                     })}
@@ -450,7 +457,7 @@ export default function App() {
                     </label>
 
                     {variation.routine.map((item, itemIdx) => (
-                      <div key={itemIdx} className="space-y-3 border-l-4 border-gray-600 bg-[#181818] p-3">
+                      <div key={itemIdx} className={`space-y-3 border-l-4 ${item.isSuperset ? 'border-[#d1a153]' : 'border-gray-600'} bg-[#181818] p-3`}>
                         <div className="flex items-center justify-between gap-2">
                           <strong className="text-xs uppercase text-gray-300">Exercício {itemIdx + 1}</strong>
                           {variation.routine.length > 1 && (
@@ -464,6 +471,18 @@ export default function App() {
                           <label className="text-xs text-gray-400">Séries <input type="number" min="1" value={item.sets} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'sets', Number(e.target.value))} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
                           <label className="text-xs text-gray-400">Reps <input value={item.reps} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'reps', e.target.value)} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
                           <label className="text-xs text-gray-400">Descanso (s) <input type="number" min="0" value={item.rest} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'rest', Number(e.target.value))} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
+                        </div>
+                        
+                        <div className="mt-2 flex items-center gap-2 border-t border-gray-700 pt-2">
+                          <input 
+                            type="checkbox" 
+                            checked={item.isSuperset || false} 
+                            onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'isSuperset', e.target.checked)} 
+                            className="h-4 w-4 accent-[#d1a153]" 
+                          />
+                          <label className="text-xs font-bold uppercase text-[#d1a153] cursor-pointer" onClick={() => handleUpdateRoutineItem(vIdx, itemIdx, 'isSuperset', !item.isSuperset)}>
+                            Ligar ao próximo exercício (Supersérie)
+                          </label>
                         </div>
                       </div>
                     ))}
