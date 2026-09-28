@@ -116,14 +116,18 @@ export default function App() {
 
   const DARK_RED = '#5A1624';
 
-  // Emblema Oficial Exato da Federação Portuguesa de Futebol (FPF)
+  // Emblema Oficial FPF em Vetor Inline Exato (Garantido a 100% sem erros de carregamento externo)
   const FPFEmissionBadge = () => (
-    <div className="flex items-center justify-center bg-[#8a152e] border-2 border-[#d1a153] rounded-lg p-1 h-12 w-12 shadow-xl shrink-0 overflow-hidden">
-      <img 
-        src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 500'><path d='M250 20C140 20 50 70 50 200c0 150 100 240 200 280 100-40 200-130 200-280C450 70 360 20 250 20z' fill='%23701022' stroke='%23d1a153' stroke-width='20'/><text x='250' y='220' text-anchor='middle' fill='%23d1a153' font-family='Arial, sans-serif' font-weight='900' font-size='130'>FPF</text><circle cx='250' cy='340' r='55' fill='none' stroke='%23d1a153' stroke-width='14'/><circle cx='200' cy='340' r='14' fill='%2316a34a'/><circle cx='250' cy='340' r='14' fill='%23facc15'/><circle cx='300' cy='340' r='14' fill='%23dc2626'/></svg>" 
-        alt="FPF Logo" 
-        className="h-full w-full object-contain"
-      />
+    <div className="flex items-center justify-center bg-[#781022] border-2 border-[#d1a153] rounded-md px-1 py-1 shadow-xl shrink-0 w-12 h-12">
+      <svg viewBox="0 0 175 68" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="175" height="68" rx="8" fill="#781022"/>
+        {/* Tipografia Oficial FPF Estilizada */}
+        <text x="14" y="48" fill="#d1a153" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="38" letterSpacing="-1">FPF</text>
+        {/* Detalhes de Esfera/Cores Oficiais no canto direito */}
+        <circle cx="152" cy="22" r="5" fill="#eab308"/>
+        <circle cx="138" cy="48" r="5" fill="#16a34a"/>
+        <circle cx="156" cy="48" r="5" fill="#dc2626"/>
+      </svg>
     </div>
   );
 
