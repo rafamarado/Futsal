@@ -28,9 +28,10 @@ let db = null;
 try {
   const app = initializeApp(firebaseConfig);
   auth = getAuth(app);
-  db = getFirestore(app);
+  // Inicialização explícita da BD default
+  db = getFirestore(app, '(default)');
 } catch (e) {
-  console.warn("Firebase não inicializado.");
+  console.warn("Erro ao iniciar Firebase:", e);
 }
 
 const EQUIPAS_INICIAIS = [
@@ -92,6 +93,7 @@ export default function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
 
   const [activeTab, setActiveTab] = useState('live');
   const [teams, setTeams] = useState(EQUIPAS_INICIAIS);
@@ -127,19 +129,31 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // Sincronização em tempo real com o Firestore
+  // Sincronização em tempo real com o Firestore com tratamento de erros visíveis
   useEffect(() => {
-    if (!db) return;
+    if (!db) {
+      setStatusMessage('⚠️ Base de dados não inicializada.');
+      return;
+    }
+
     const unsubExercises = onSnapshot(doc(db, 'futsal_hub', 'exercises'), (docSnap) => {
       if (docSnap.exists() && docSnap.data().list) {
         setExercises(docSnap.data().list);
       }
+    }, (err) => {
+      console.warn("Erro ao ler exercícios do Firestore:", err);
+      setStatusMessage('❌ Erro de permissão/leitura no Firestore.');
     });
+
     const unsubSessions = onSnapshot(doc(db, 'futsal_hub', 'sessions'), (docSnap) => {
       if (docSnap.exists() && docSnap.data().list) {
         setSessions(docSnap.data().list);
       }
+    }, (err) => {
+      console.warn("Erro ao ler sessões do Firestore:", err);
+      setStatusMessage('❌ Erro de permissão/leitura no Firestore.');
     });
+
     return () => {
       unsubExercises();
       unsubSessions();
@@ -151,8 +165,11 @@ export default function App() {
     if (db) {
       try {
         await setDoc(doc(db, 'futsal_hub', 'exercises'), { list: newExercises });
+        setStatusMessage('✅ Exercícios guardados na cloud!');
+        setTimeout(() => setStatusMessage(''), 3000);
       } catch (e) {
         console.error("Erro ao guardar exercícios:", e);
+        setStatusMessage('❌ Erro ao gravar exercícios (ver consola).');
       }
     }
   };
@@ -162,8 +179,11 @@ export default function App() {
     if (db) {
       try {
         await setDoc(doc(db, 'futsal_hub', 'sessions'), { list: newSessions });
+        setStatusMessage('✅ Sessão guardada na cloud!');
+        setTimeout(() => setStatusMessage(''), 3000);
       } catch (e) {
         console.error("Erro ao guardar sessões:", e);
+        setStatusMessage('❌ Erro ao gravar sessão (verifique as Regras).');
       }
     }
   };
@@ -402,6 +422,12 @@ export default function App() {
           <img src={FPF_LOGO} alt="FPF" className="h-8 w-8 object-contain" />
           <h1 className="font-black tracking-wider text-[#d1a153]">Performance Hub</h1>
         </div>
+
+        {statusMessage && (
+          <div className="bg-[#222] p-2 text-center text-xs font-bold text-[#d1a153] border-b border-gray-800">
+            {statusMessage}
+          </div>
+        )}
 
         <div className="border-b border-gray-800 p-4 bg-[#161616]">
           <label className="mb-2 block text-xs font-bold uppercase text-gray-400">Seleção / Equipa</label>
