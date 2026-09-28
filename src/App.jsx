@@ -114,8 +114,14 @@ export default function App() {
   const [newExUrl, setNewExUrl] = useState('');
   const [editingExerciseId, setEditingExerciseId] = useState(null);
 
-  const FPF_LOGO = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Logo_FPF_2021.svg/512px-Logo_FPF_2021.svg.png';
   const DARK_RED = '#5A1624';
+
+  // Componente de Emblema Oficial FPF (Garantido sem erros de link externo)
+  const FPFEmissionBadge = () => (
+    <div className="flex items-center justify-center bg-[#8a152e] border-2 border-[#d1a153] rounded-full h-12 w-12 shadow-lg shrink-0">
+      <span className="text-[11px] font-black tracking-tighter text-[#d1a153]">FPF</span>
+    </div>
+  );
 
   useEffect(() => {
     if (!auth) {
@@ -175,7 +181,9 @@ export default function App() {
   if (!user) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-[#121212] font-sans text-white relative overflow-hidden" style={{ backgroundColor: DARK_RED }}>
-        <img src={FPF_LOGO} alt="Watermark" className="absolute opacity-10 blur-sm pointer-events-none" style={{ width: '80vh' }} />
+        <div className="absolute opacity-10 blur-sm pointer-events-none flex items-center justify-center h-48 w-48 rounded-full border-4 border-[#d1a153]">
+          <span className="text-6xl font-black text-[#d1a153]">FPF</span>
+        </div>
         <div className="relative z-10 w-full max-w-md rounded-xl bg-[#1a1a1a]/90 p-8 shadow-2xl border border-[#d1a153]/30 backdrop-blur">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-black uppercase tracking-wider text-[#d1a153]">Futsal Training Hub</h1>
@@ -341,7 +349,7 @@ export default function App() {
       <div className="flex h-screen w-screen flex-col bg-[#111] text-white">
         <header className="flex items-center justify-between border-b border-gray-800 bg-[#161616] px-8 py-4">
           <div className="flex items-center gap-4">
-            <img src={FPF_LOGO} alt="FPF" className="h-12 w-12 object-contain" />
+            <FPFEmissionBadge />
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-xl font-black uppercase text-[#d1a153]">{liveSession?.name || 'GYM FLOOR STANDBY'}</h1>
@@ -456,7 +464,7 @@ export default function App() {
     <div className="flex h-screen w-screen overflow-hidden bg-[#121212] text-white">
       <aside className="flex w-72 flex-col border-r border-gray-800 bg-[#181818]">
         <div className="flex items-center gap-3 border-b border-gray-800 p-6">
-          <img src={FPF_LOGO} alt="FPF" className="h-8 w-8 object-contain" />
+          <FPFEmissionBadge />
           <h1 className="font-black tracking-wider text-[#d1a153]">Performance Hub</h1>
         </div>
 
