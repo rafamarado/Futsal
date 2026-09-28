@@ -43,6 +43,7 @@ const SESSOES_INICIAIS = [
     id: 's1',
     teamId: 't1',
     name: 'Ativação & Força Máxima (-2)',
+    trainingType: 'linear', // 'linear' ou 'circuit'
     variations: [
       {
         id: 'v1',
@@ -62,22 +63,6 @@ function criarItemRotina(exerciseId = '') {
   return { exerciseId, sets: 3, reps: '10', rest: 60, notes: '', isSuperset: false };
 }
 
-function getSupersetGroupIds(routine) {
-  const groupIds = Array(routine.length).fill(null);
-  let nextGroupId = 0;
-  for (let index = 0; index < routine.length - 1; index += 1) {
-    if (!routine[index].isSuperset) continue;
-    let groupId = groupIds[index];
-    if (groupId === null) {
-      groupId = groupIds[index - 1] ?? nextGroupId + 1;
-      nextGroupId = Math.max(nextGroupId, groupId);
-    }
-    groupIds[index] = groupId;
-    groupIds[index + 1] = groupId;
-  }
-  return groupIds;
-}
-
 export default function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -89,10 +74,9 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('live');
   const [teams, setTeams] = useState(EQUIPAS_INICIAIS);
   
-  // Persistência local inteligente para exercícios e sessões
   const [exercises, setExercises] = useState(() => {
     try {
-      const saved = localStorage.getItem('futsal_exercises_v1');
+      const saved = localStorage.getItem('futsal_exercises_v2');
       return saved ? JSON.parse(saved) : EXERCICIOS_INICIAIS;
     } catch {
       return EXERCICIOS_INICIAIS;
@@ -101,7 +85,7 @@ export default function App() {
 
   const [sessions, setSessions] = useState(() => {
     try {
-      const saved = localStorage.getItem('futsal_sessions_v1');
+      const saved = localStorage.getItem('futsal_sessions_v2');
       return saved ? JSON.parse(saved) : SESSOES_INICIAIS;
     } catch {
       return SESSOES_INICIAIS;
@@ -113,6 +97,7 @@ export default function App() {
   const activeTeam = teams.find((t) => t.id === activeTeamId) || teams[0];
 
   const [newSessionName, setNewSessionName] = useState('');
+  const [newTrainingType, setNewTrainingType] = useState('linear');
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [variations, setVariations] = useState([
     { id: 'v1', name: 'Versão V1', routine: [criarItemRotina(EXERCICIOS_INICIAIS[0].id)] }
@@ -137,10 +122,9 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // Guardar automaticamente no armazenamento local sempre que houver alterações
   useEffect(() => {
     try {
-      localStorage.setItem('futsal_exercises_v1', JSON.stringify(exercises));
+      localStorage.setItem('futsal_exercises_v2', JSON.stringify(exercises));
     } catch (e) {
       console.error(e);
     }
@@ -148,7 +132,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('futsal_sessions_v1', JSON.stringify(sessions));
+      localStorage.setItem('futsal_sessions_v2', JSON.stringify(sessions));
     } catch (e) {
       console.error(e);
     }
@@ -234,6 +218,7 @@ export default function App() {
 
   const resetSessionForm = () => {
     setNewSessionName('');
+    setNewTrainingType('linear');
     setEditingSessionId(null);
     setVariations([{ id: `v-${Date.now()}`, name: 'Versão V1', routine: [criarItemRotina(exercises[0]?.id || '')] }]);
   };
@@ -286,6 +271,7 @@ export default function App() {
     setEditingSessionId(session.id);
     setActiveTeamId(session.teamId);
     setNewSessionName(session.name);
+    setNewTrainingType(session.trainingType || 'linear');
     setVariations(session.variations.map(v => ({ ...v, routine: v.routine.map(i => ({ ...i })) })));
     setActiveTab('builder');
   };
@@ -293,7 +279,13 @@ export default function App() {
   const handleSaveSession = (event) => {
     event.preventDefault();
     if (!newSessionName.trim()) return;
-    const session = { id: editingSessionId || Date.now().toString(), teamId: activeTeam.id, name: newSessionName.trim(), variations };
+    const session = { 
+      id: editingSessionId || Date.now().toString(), 
+      teamId: activeTeam.id, 
+      name: newSessionName.trim(), 
+      trainingType: newTrainingType,
+      variations 
+    };
     const updated = editingSessionId 
       ? sessions.map(s => s.id === editingSessionId ? session : s) 
       : [...sessions, session];
@@ -332,8 +324,13 @@ export default function App() {
       <div className="flex h-screen w-screen flex-col bg-[#111] text-white">
         <header className="flex items-center justify-between border-b border-gray-800 bg-[#161616] px-8 py-4">
           <div>
-            <h1 className="text-xl font-black uppercase text-[#d1a153]">{liveSession?.name || 'GYM FLOOR STANDBY'}</h1>
-            <p className="text-xs uppercase text-gray-400">{liveSession && liveSession.teamName}</p>
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl font-black uppercase text-[#d1a153]">{liveSession?.name || 'GYM FLOOR STANDBY'}</h1>
+              <span className="bg-[#8a152e] text-white text-[10px] font-black uppercase px-2 py-0.5 rounded">
+                {liveSession?.trainingType === 'circuit' ? '🔄 Treino em Circuito' : '⚡ Treino Linear / Supersérie'}
+              </span>
+            </div>
+            <p className="text-xs uppercase text-gray-400 mt-0.5">{liveSession && liveSession.teamName}</p>
           </div>
           <button onClick={() => setActiveTab('live')} className="rounded border border-gray-600 bg-gray-800 px-5 py-2 font-bold uppercase hover:bg-gray-700">
             Voltar ao Painel
@@ -348,29 +345,56 @@ export default function App() {
           ) : (
             <div className="grid h-full w-full gap-5" style={{ gridTemplateColumns: `repeat(${liveSession.variations.length}, minmax(0, 1fr))` }}>
               {liveSession.variations.map((variation) => {
-                const groups = getSupersetGroupIds(variation.routine);
+                // Agrupamento visual inteligente para superséries (agrupa blocos encadeados)
+                const routine = variation.routine;
+                const blocks = [];
+                let currentBlock = [];
+
+                routine.forEach((item, idx) => {
+                  currentBlock.item = currentBlock.item || [];
+                  currentBlock.push(item);
+                  // Se o exercício atual não tem isSuperset, o bloco fecha aqui
+                  if (!item.isSuperset || idx === routine.length - 1) {
+                    blocks.push([...currentBlock]);
+                    currentBlock = [];
+                  }
+                });
+
                 return (
-                  <div key={variation.id} className="flex flex-col gap-4 overflow-y-auto bg-[#181818] p-4 border border-gray-800">
+                  <div key={variation.id} className="flex flex-col gap-4 overflow-y-auto bg-[#181818] p-4 border border-gray-800 rounded-lg">
                     <h3 className="text-center text-lg font-black uppercase text-[#d1a153]">{variation.name}</h3>
-                    {variation.routine.map((item, index) => {
-                      const groupId = groups[index];
+                    
+                    {blocks.map((block, bIdx) => {
+                      const isSupersetBlock = block.length > 1;
                       return (
-                        <article key={index} className={`flex items-center gap-4 overflow-hidden border-l-4 bg-[#222] p-4 rounded shadow-md ${groupId ? 'border-[#d1a153] bg-gradient-to-r from-[#d1a153]/10 to-transparent' : 'border-[#8a152e]'}`}>
-                          <img src={item.mediaUrl} alt={item.name} className="h-20 w-20 rounded-md object-cover border border-gray-700" />
-                          <div className="flex-1">
-                            <h4 className="font-bold text-white uppercase">{item.name}</h4>
-                            <p className="text-sm text-gray-400 mt-1">
-                              {item.sets} séries · {item.reps} reps · {item.rest}s descanso
-                            </p>
-                            {item.notes && <p className="text-xs text-yellow-500/80 mt-1">{item.notes}</p>}
-                          </div>
-                          {groupId && (
-                            <div className="flex flex-col items-center justify-center px-2">
-                              <span className="text-[10px] font-black uppercase text-[#d1a153]">Supersérie</span>
-                              <span className="text-xl">🔗</span>
+                        <div 
+                          key={bIdx} 
+                          className={`p-3 rounded-lg border ${isSupersetBlock ? 'border-[#d1a153] bg-[#25221b]' : 'border-gray-800 bg-[#222]'}`}
+                        >
+                          {isSupersetBlock && (
+                            <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#d1a153]/30">
+                              <span className="text-xs font-black uppercase text-[#d1a153] tracking-wider">🔗 Bloco em Supersérie</span>
+                              <span className="text-xs font-bold text-gray-300">
+                                {block[0].sets} Séries · {block[0].rest}s Descanso Final
+                              </span>
                             </div>
                           )}
-                        </article>
+
+                          <div className="space-y-3">
+                            {block.map((item, iIdx) => (
+                              <article key={iIdx} className="flex items-center gap-4 bg-[#1a1a1a] p-3 rounded border border-gray-800">
+                                <img src={item.mediaUrl} alt={item.name} className="h-16 w-16 rounded object-cover border border-gray-700" />
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-bold text-white uppercase text-sm truncate">{item.name}</h4>
+                                  <p className="text-xs text-gray-400 mt-1">
+                                    {isSupersetBlock ? `${item.reps} reps` : `${item.sets} séries · ${item.reps} reps · ${item.rest}s descanso`}
+                                  </p>
+                                  {item.notes && <p className="text-[11px] text-yellow-500/90 mt-1 font-medium">{item.notes}</p>}
+                                </div>
+                              </article>
+                            ))}
+                          </div>
+                        </div>
                       );
                     })}
                   </div>
@@ -460,8 +484,13 @@ export default function App() {
                 {teamSessions.map((session) => (
                   <article key={session.id} className="flex flex-wrap items-center justify-between gap-4 border border-gray-800 bg-[#1a1a1a] p-5">
                     <div>
-                      <h4 className="text-lg font-black uppercase">{session.name}</h4>
-                      <p className="mt-1 text-sm text-gray-400">{session.variations.length} variações</p>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="text-lg font-black uppercase">{session.name}</h4>
+                        <span className="text-[10px] bg-gray-800 text-gray-300 font-bold px-2 py-0.5 rounded uppercase">
+                          {session.trainingType === 'circuit' ? '🔄 Circuito' : '⚡ Linear'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-400">{session.variations.length} variações</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <button onClick={() => handleEditSession(session)} className="bg-gray-700 px-3 py-2 text-sm font-bold hover:bg-gray-600">Editar</button>
@@ -479,10 +508,20 @@ export default function App() {
           <main className="max-w-6xl flex-1 p-8">
             <h3 className="mb-5 text-2xl font-black uppercase text-[#d1a153]">{editingSessionId ? 'Editar treino' : 'Criar treino'}</h3>
             <form onSubmit={handleSaveSession} className="space-y-6 border border-gray-800 bg-[#181818] p-6">
-              <label className="block text-sm font-bold uppercase text-gray-400">
-                Nome da sessão
-                <input required value={newSessionName} onChange={(e) => setNewSessionName(e.target.value)} className="mt-2 w-full border border-gray-700 bg-[#111] p-3 text-white" placeholder="Ex: Força máxima" />
-              </label>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label className="block text-sm font-bold uppercase text-gray-400">
+                  Nome da sessão
+                  <input required value={newSessionName} onChange={(e) => setNewSessionName(e.target.value)} className="mt-2 w-full border border-gray-700 bg-[#111] p-3 text-white" placeholder="Ex: Força máxima" />
+                </label>
+                <label className="block text-sm font-bold uppercase text-gray-400">
+                  Tipo de Treino
+                  <select value={newTrainingType} onChange={(e) => setNewTrainingType(e.target.value)} className="mt-2 w-full border border-gray-700 bg-[#111] p-3 font-bold text-white">
+                    <option value="linear">⚡ Treino Linear / Convencional</option>
+                    <option value="circuit">🔄 Treino em Circuito / Estações</option>
+                  </select>
+                </label>
+              </div>
 
               <div className="flex items-center justify-between border-b border-gray-800 pb-3">
                 <h4 className="font-bold uppercase">Variações / grupos</h4>
@@ -497,36 +536,39 @@ export default function App() {
                       <input required value={variation.name} onChange={(e) => setVariations(variations.map((v, i) => i === vIdx ? { ...v, name: e.target.value } : v))} className="mt-2 w-full border border-gray-600 bg-[#111] p-2 text-base text-white" />
                     </label>
 
-                    {variation.routine.map((item, itemIdx) => (
-                      <div key={itemIdx} className={`space-y-3 border-l-4 ${item.isSuperset ? 'border-[#d1a153]' : 'border-gray-600'} bg-[#181818] p-3`}>
-                        <div className="flex items-center justify-between gap-2">
-                          <strong className="text-xs uppercase text-gray-300">Exercício {itemIdx + 1}</strong>
-                          {variation.routine.length > 1 && (
-                            <button type="button" onClick={() => handleRemoveRoutineItem(vIdx, itemIdx)} className="px-2 font-bold text-red-400">✕</button>
-                          )}
+                    {variation.routine.map((item, itemIdx) => {
+                      const isLinkedToNext = item.isSuperset;
+                      return (
+                        <div key={itemIdx} className={`space-y-3 border-l-4 ${isLinkedToNext ? 'border-[#d1a153] bg-[#222019]' : 'border-gray-600'} bg-[#181818] p-3 rounded`}>
+                          <div className="flex items-center justify-between gap-2">
+                            <strong className="text-xs uppercase text-gray-300">Exercício {itemIdx + 1}</strong>
+                            {variation.routine.length > 1 && (
+                              <button type="button" onClick={() => handleRemoveRoutineItem(vIdx, itemIdx)} className="px-2 font-bold text-red-400">✕</button>
+                            )}
+                          </div>
+                          <select value={item.exerciseId} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'exerciseId', e.target.value)} className="w-full border border-gray-600 bg-[#222] p-2 text-sm text-white">
+                            {exercises.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
+                          </select>
+                          <div className="grid grid-cols-3 gap-2">
+                            <label className="text-xs text-gray-400">Séries <input type="number" min="1" value={item.sets} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'sets', Number(e.target.value))} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
+                            <label className="text-xs text-gray-400">Reps <input value={item.reps} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'reps', e.target.value)} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
+                            <label className="text-xs text-gray-400">Descanso (s) <input type="number" min="0" value={item.rest} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'rest', Number(e.target.value))} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
+                          </div>
+                          
+                          <div className="mt-2 flex items-center gap-2 border-t border-gray-700 pt-2">
+                            <input 
+                              type="checkbox" 
+                              checked={item.isSuperset || false} 
+                              onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'isSuperset', e.target.checked)} 
+                              className="h-4 w-4 accent-[#d1a153]" 
+                            />
+                            <label className="text-xs font-bold uppercase text-[#d1a153] cursor-pointer" onClick={() => handleUpdateRoutineItem(vIdx, itemIdx, 'isSuperset', !item.isSuperset)}>
+                              🔗 Ligar ao próximo em Supersérie (Sem descanso intermédio)
+                            </label>
+                          </div>
                         </div>
-                        <select value={item.exerciseId} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'exerciseId', e.target.value)} className="w-full border border-gray-600 bg-[#222] p-2 text-sm text-white">
-                          {exercises.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
-                        </select>
-                        <div className="grid grid-cols-3 gap-2">
-                          <label className="text-xs text-gray-400">Séries <input type="number" min="1" value={item.sets} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'sets', Number(e.target.value))} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
-                          <label className="text-xs text-gray-400">Reps <input value={item.reps} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'reps', e.target.value)} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
-                          <label className="text-xs text-gray-400">Descanso (s) <input type="number" min="0" value={item.rest} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'rest', Number(e.target.value))} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
-                        </div>
-                        
-                        <div className="mt-2 flex items-center gap-2 border-t border-gray-700 pt-2">
-                          <input 
-                            type="checkbox" 
-                            checked={item.isSuperset || false} 
-                            onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'isSuperset', e.target.checked)} 
-                            className="h-4 w-4 accent-[#d1a153]" 
-                          />
-                          <label className="text-xs font-bold uppercase text-[#d1a153] cursor-pointer" onClick={() => handleUpdateRoutineItem(vIdx, itemIdx, 'isSuperset', !item.isSuperset)}>
-                            Ligar ao próximo exercício (Supersérie)
-                          </label>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     <button type="button" onClick={() => handleAddExerciseToVariation(vIdx)} className="w-full bg-gray-700 py-2 text-sm font-bold uppercase hover:bg-gray-600">+ Adicionar exercício</button>
                   </section>
                 ))}
