@@ -116,13 +116,17 @@ export default function App() {
 
   const DARK_RED = '#5A1624';
 
-  // Emblema Oficial Direto FPF
+  // Emblema Oficial FPF Embutido em SVG Inline (Garantido a 100% sem falhas de rede)
   const FPFEmissionBadge = () => (
-    <img 
-      src="https://upload.wikimedia.org/wikipedia/commons/1/18/Logo_FPF_2021.svg" 
-      alt="FPF Logo" 
-      className="h-12 w-12 object-contain"
-    />
+    <div className="flex items-center justify-center bg-[#8a152e] border-2 border-[#d1a153] rounded-lg p-1.5 shadow-xl shrink-0">
+      <svg viewBox="0 0 175 68" className="h-9 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12.5 2C6.7 2 2 6.7 2 12.5V55.5C2 61.3 6.7 66 12.5 66H162.5C168.3 66 173 61.3 173 55.5V12.5C173 6.7 168.3 2 162.5 2H12.5Z" fill="#751125" stroke="#d1a153" strokeWidth="4"/>
+        <text x="14" y="47" fill="#d1a153" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="36" letterSpacing="1">FPF</text>
+        <path d="M135 18L145 28L155 18" stroke="#d1a153" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+        <circle cx="145" cy="48" r="8" fill="#22c55e"/>
+        <circle cx="120" cy="48" r="6" fill="#eab308"/>
+      </svg>
+    </div>
   );
 
   useEffect(() => {
