@@ -325,7 +325,7 @@ export default function App() {
     event.preventDefault();
     if (!newSessionName.trim()) return;
     const session = { id: editingSessionId || Date.now().toString(), teamId: activeTeam.id, name: newSessionName.trim(), variations };
-    const updated = editingExerciseId 
+    const updated = editingSessionId 
       ? sessions.map(s => s.id === editingSessionId ? session : s) 
       : [...sessions, session];
 
@@ -395,7 +395,7 @@ export default function App() {
                             <p className="text-sm text-gray-400 mt-1">
                               {item.sets} séries · {item.reps} reps · {item.rest}s descanso
                             </p>
-                            {item.notes && <p className="text-xs text-yellow-500/80 mt-1">{item.notes}</p>}
+                            {item.notes && <p className="text-xs text-yellow-400 font-semibold mt-1">📝 {item.notes}</p>}
                           </div>
                           {groupId && (
                             <div className="flex flex-col items-center justify-center px-2">
@@ -440,7 +440,7 @@ export default function App() {
         <nav className="flex-1 space-y-2 p-4">
           {[
             ['live', '📺', 'Gestão de Sessões'],
-            ['tv_display', '🖥️', 'Transmissão (Modo TV)'],
+            ['tv_display', '🖥️️', 'Transmissão (Modo TV)'],
             ['builder', '📋', 'Criar Novo Treino'],
             ['database', '🏋️', 'Base de Exercícios']
           ].map(([tab, icon, label]) => (
@@ -549,6 +549,17 @@ export default function App() {
                           <label className="text-xs text-gray-400">Descanso (s) <input type="number" min="0" value={item.rest} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'rest', Number(e.target.value))} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
                         </div>
                         
+                        <div>
+                          <label className="text-xs text-gray-400 block mb-1">Notas / Observações</label>
+                          <input 
+                            type="text" 
+                            value={item.notes || ''} 
+                            onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'notes', e.target.value)} 
+                            placeholder="Ex: Focar na explosão na subida" 
+                            className="w-full border border-gray-600 bg-[#222] p-2 text-sm text-white focus:border-[#d1a153] focus:outline-none"
+                          />
+                        </div>
+
                         <div className="mt-2 flex items-center gap-2 border-t border-gray-700 pt-2">
                           <input 
                             type="checkbox" 
