@@ -424,7 +424,6 @@ export default function App() {
     setActiveTab('builder');
   };
 
-  // Salvamento seguro e imutável baseado no estado funcional atual
   const handleSaveSession = (event) => {
     event.preventDefault();
     if (!newSessionName.trim()) return;
@@ -456,7 +455,6 @@ export default function App() {
     setActiveTab('live');
   };
 
-  // Eliminação estritamente segura baseada no ID exato
   const handleDeleteSession = (sessionId) => {
     setSessions(prevSessions => {
       const updated = prevSessions.filter(s => s.id !== sessionId);
@@ -515,7 +513,7 @@ export default function App() {
               <button onClick={() => setActiveTab('live')} className="rounded bg-[#8a152e] px-6 py-3 font-bold uppercase">Escolher sessão</button>
             </div>
           ) : (
-            <div className="grid h-full w-full gap-6" style={{ gridTemplateColumns: `repeat(${liveSession.variations.length}, minmax(0, 1fr))` }}>
+            <div className="grid h-full w-full gap-6 items-start" style={{ gridTemplateColumns: `repeat(${liveSession.variations.length}, minmax(0, 1fr))` }}>
               {liveSession.variations.map((variation) => {
                 const groups = getSupersetGroupIds(variation.routine);
                 return (
@@ -525,11 +523,12 @@ export default function App() {
                       const groupId = groups[index];
                       return (
                         <article key={index} className={`flex flex-col overflow-hidden border-l-4 bg-[#222] rounded-xl shadow-2xl ${groupId ? 'border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-[#8a152e]'}`}>
-                          <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="w-full h-72 bg-black shrink-0 border-b border-gray-700" />
+                          {/* Altura flexível controlada (max-h-56) para nunca cortar os textos em baixo */}
+                          <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="w-full h-48 sm:h-56 bg-black shrink-0 border-b border-gray-700 object-contain" />
                           
-                          <div className="p-5 flex flex-col gap-3">
+                          <div className="p-4 sm:p-5 flex flex-col gap-3">
                             <div className="flex items-start justify-between gap-3">
-                              <h4 className="text-xl font-black text-white uppercase tracking-wide">{item.name}</h4>
+                              <h4 className="text-lg sm:text-xl font-black text-white uppercase tracking-wide leading-snug">{item.name}</h4>
                               {groupId && (
                                 <span className="bg-[#d1a153]/20 text-[#d1a153] border border-[#d1a153]/40 px-2.5 py-0.5 rounded text-[10px] font-black uppercase shrink-0">
                                   🔗 Supersérie
@@ -537,7 +536,7 @@ export default function App() {
                               )}
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-4 text-base font-bold text-gray-300 bg-[#191919] p-3 rounded-lg border border-gray-800">
+                            <div className="flex flex-wrap items-center gap-3 text-sm sm:text-base font-bold text-gray-300 bg-[#191919] p-3 rounded-lg border border-gray-800">
                               <span className="text-[#d1a153]">{item.sets} Séries</span>
                               <span>•</span>
                               <span>{item.reps} Reps</span>
@@ -546,7 +545,7 @@ export default function App() {
                             </div>
 
                             {item.notes && (
-                              <p className="text-sm text-yellow-300 font-bold bg-yellow-950/40 p-3 rounded-lg border border-yellow-600/30 flex items-start gap-2">
+                              <p className="text-xs sm:text-sm text-yellow-300 font-bold bg-yellow-950/40 p-3 rounded-lg border border-yellow-600/30 flex items-start gap-2">
                                 <span>📝</span>
                                 <span className="flex-1">{item.notes}</span>
                               </p>
