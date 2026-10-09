@@ -107,7 +107,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
 
   if (hasError || !url.trim()) {
     return (
-      <div className={`bg-gray-800 flex flex-col items-center justify-center text-gray-400 text-xs uppercase font-bold ${className}`}>
+      <div className={`bg-gray-800 flex flex-col items-center justify-center text-gray-400 text-xs uppercase font-bold w-full h-full ${className}`}>
         <span>Sem Média</span>
       </div>
     );
@@ -118,7 +118,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
     if (ytId) {
       if (isPlaying) {
         return (
-          <div className={`relative overflow-hidden bg-black ${className}`}>
+          <div className={`relative overflow-hidden bg-black w-full h-full ${className}`}>
             <iframe
               src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0`}
               title={alt || 'Vídeo YouTube'}
@@ -140,7 +140,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
       return (
         <div 
           onClick={() => setIsPlaying(true)}
-          className={`relative overflow-hidden bg-black flex items-center justify-center cursor-pointer group ${className}`}
+          className={`relative overflow-hidden bg-black flex items-center justify-center cursor-pointer group w-full h-full ${className}`}
           title="Clique para reproduzir o vídeo"
         >
           <img 
@@ -167,7 +167,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
         muted
         playsInline
         onError={() => setHasError(true)}
-        className={`${className} object-cover`}
+        className={`w-full h-full object-cover ${className}`}
       />
     );
   }
@@ -176,7 +176,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
     <img
       src={url}
       alt={alt || 'Exercício'}
-      className={`${className} object-cover`}
+      className={`w-full h-full object-cover ${className}`}
       onError={() => setHasError(true)}
     />
   );
@@ -224,10 +224,6 @@ export default function App() {
   const [variations, setVariations] = useState([
     { id: 'v1', name: 'Versão V1', routine: [criarItemRotina(EXERCICIOS_INICIAIS[0].id)] }
   ]);
-
-  // Estados para modal de importação
-  const [importModalTeamId, setImportModalTeamId] = useState('');
-  const [showImportModal, setShowImportModal] = useState(false);
 
   const [newExName, setNewExName] = useState('');
   const [newExUrl, setNewExUrl] = useState('');
@@ -494,22 +490,19 @@ export default function App() {
     }
   };
 
-  const handleSelectTeamToImport = (teamId) => {
-    if (!teamId) return;
-    setImportModalTeamId(teamId);
-    setShowImportModal(true);
-  };
-
-  const handleConfirmImportSession = (sessionToImport) => {
+  // 1. IMPORTAÇÃO EXATA: Seleção direta do ID do treino a copiar
+  const handleImportSessionById = (sessionId) => {
+    if (!sessionId) return;
+    const sessionToImport = sessions.find(s => s.id === sessionId);
+    if (!sessionToImport) return;
+    
     setNewSessionName(sessionToImport.name + ' (Cópia)');
     setVariations(sessionToImport.variations.map(v => ({
       id: `v-${Date.now()}-${Math.random()}`,
       name: v.name,
       routine: v.routine.map(i => ({ ...i }))
     })));
-    setShowImportModal(false);
-    setImportModalTeamId('');
-    setStatusMessage('📋 Treino importado com sucesso!');
+    setStatusMessage('📋 Treino copiado com sucesso!');
     setTimeout(() => setStatusMessage(''), 3000);
   };
 
@@ -537,9 +530,10 @@ export default function App() {
   const teamSessions = sessions.filter(s => s.teamId === activeTeam.id);
 
   if (activeTab === 'tv_display') {
+    // 2. MODO TV DINÂMICO: Usa flex-1 para espremer os exercícios e adaptar tudo ao ecrã
     return (
       <div className="flex h-screen w-screen flex-col bg-[#111] text-white overflow-hidden select-none">
-        <header className="flex items-center justify-between border-b border-gray-800 bg-[#161616] px-6 py-2 shrink-0 h-14">
+        <header className="flex items-center justify-between border-b border-gray-800 bg-[#161616] px-6 py-2 h-14 shrink-0">
           <div className="flex items-center gap-3">
             <img src={FPF_LOGO} alt="FPF" className="h-7 w-7 object-contain" />
             <div>
@@ -552,7 +546,7 @@ export default function App() {
           </button>
         </header>
         
-        <div className="flex-1 overflow-hidden p-3 h-[calc(100vh-3.5rem)]">
+        <div className="flex-1 p-3 min-h-0 overflow-hidden">
           {!liveSession ? (
             <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
               <p className="text-lg font-bold text-gray-400">A aguardar seleção de treino</p>
@@ -563,38 +557,39 @@ export default function App() {
               {liveSession.variations.map((variation) => {
                 const groups = getSupersetGroupIds(variation.routine);
                 return (
-                  <div key={variation.id} className="flex flex-col h-full max-h-full overflow-hidden bg-[#181818] p-2.5 border border-gray-800 rounded-xl">
+                  <div key={variation.id} className="flex flex-col h-full bg-[#181818] p-2.5 border border-gray-800 rounded-xl overflow-hidden">
                     <h3 className="text-center text-xs font-black uppercase text-[#d1a153] tracking-wider py-1 mb-2 shrink-0 border-b border-gray-800">{variation.name}</h3>
                     
-                    <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 min-h-0">
+                    <div className="flex flex-col flex-1 gap-2 min-h-0">
                       {variation.routine.map((item, index) => {
                         const groupId = groups[index];
                         return (
-                          <article key={index} className={`flex flex-col overflow-hidden border-l-4 bg-[#222] rounded-lg shadow-md shrink-0 ${groupId ? 'border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-[#8a152e]'}`}>
-                            <div className="w-full h-32 bg-black shrink-0 border-b border-gray-700 relative overflow-hidden">
-                              <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="w-full h-full object-cover" />
+                          <article key={index} className={`flex flex-row flex-1 overflow-hidden bg-[#222] rounded-lg shadow-md ${groupId ? 'border-l-4 border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-l-4 border-[#8a152e]'}`}>
+                            
+                            <div className="w-5/12 bg-black shrink-0 relative flex items-center justify-center">
+                               <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="absolute inset-0" />
                             </div>
                             
-                            <div className="p-2.5 flex flex-col gap-1.5">
-                              <div className="flex items-start justify-between gap-1">
-                                <h4 className="text-xs font-black text-white uppercase tracking-wide leading-tight truncate">{item.name}</h4>
+                            <div className="flex-1 p-2 flex flex-col justify-center min-w-0">
+                              <div className="flex items-start justify-between gap-1 mb-1">
+                                <h4 className="text-xs sm:text-sm font-black text-white uppercase tracking-wide leading-tight truncate">{item.name}</h4>
                                 {groupId && (
-                                  <span className="bg-[#d1a153]/20 text-[#d1a153] border border-[#d1a153]/40 px-1 py-0.2 rounded text-[7px] font-black uppercase shrink-0">
+                                  <span className="bg-[#d1a153]/20 text-[#d1a153] border border-[#d1a153]/40 px-1 py-0.5 rounded text-[8px] font-black uppercase shrink-0">
                                     🔗 Supersérie
                                   </span>
                                 )}
                               </div>
 
-                              <div className="flex flex-wrap items-center gap-1 text-[11px] font-bold text-gray-300 bg-[#191919] p-1.5 rounded border border-gray-800">
+                              <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-gray-300">
                                 <span className="text-[#d1a153]">{item.sets} Séries</span>
                                 <span>•</span>
                                 <span>{item.reps} Reps</span>
                                 <span>•</span>
-                                <span>{item.rest}s Descanso</span>
+                                <span>{item.rest}s Rest</span>
                               </div>
 
                               {item.notes && (
-                                <p className="text-[10px] text-yellow-300 font-bold bg-yellow-950/40 p-1.5 rounded border border-yellow-600/30 flex items-start gap-1">
+                                <p className="text-[9px] sm:text-[10px] text-yellow-300 font-bold bg-yellow-950/40 p-1.5 mt-1.5 rounded border border-yellow-600/30 flex items-start gap-1">
                                   <span>📝</span>
                                   <span className="flex-1 truncate">{item.notes}</span>
                                 </p>
@@ -616,46 +611,6 @@ export default function App() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#121212] text-white">
-      {/* Modal de escolha de treino para importar */}
-      {showImportModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-[#1a1a1a] border border-gray-700 w-full max-w-md rounded-xl p-6 shadow-2xl space-y-4">
-            <h3 className="text-lg font-black uppercase text-[#d1a153]">Selecionar Treino a Importar</h3>
-            <p className="text-xs text-gray-400">Escolha qual dos treinos do escalão selecionado pretende copiar para o criador:</p>
-            
-            <div className="max-h-64 overflow-y-auto space-y-2">
-              {sessions.filter(s => s.teamId === importModalTeamId).length === 0 ? (
-                <p className="text-xs text-gray-500 py-4 text-center">Este escalão não tem nenhum treino guardado.</p>
-              ) : (
-                sessions.filter(s => s.teamId === importModalTeamId).map(session => (
-                  <div key={session.id} className="flex items-center justify-between bg-[#222] border border-gray-700 p-3 rounded">
-                    <div>
-                      <h4 className="font-bold text-sm text-white">{session.name}</h4>
-                      <p className="text-[10px] text-gray-400">{session.variations.length} variações</p>
-                    </div>
-                    <button 
-                      onClick={() => handleConfirmImportSession(session)}
-                      className="bg-[#d1a153] text-black font-black text-xs uppercase px-3 py-1.5 rounded hover:bg-yellow-500"
-                    >
-                      Importar
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="flex justify-end pt-2 border-t border-gray-800">
-              <button 
-                onClick={() => setShowImportModal(false)}
-                className="bg-gray-700 text-white text-xs font-bold px-4 py-2 rounded hover:bg-gray-600 uppercase"
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <aside className="flex w-72 flex-col border-r border-gray-800 bg-[#181818]">
         <div className="flex items-center gap-3 border-b border-gray-800 p-6">
           <img src={FPF_LOGO} alt="FPF" className="h-8 w-8 object-contain" />
@@ -754,19 +709,27 @@ export default function App() {
               <h3 className="text-2xl font-black uppercase text-[#d1a153]">{editingSessionId ? 'Editar treino' : 'Criar treino'}</h3>
               
               <div className="flex items-center gap-2 bg-[#1a1a1a] p-2 border border-gray-700 rounded">
-                <span className="text-xs font-bold uppercase text-gray-400">Importar de:</span>
+                <span className="text-xs font-bold uppercase text-gray-400">Importar treino:</span>
                 <select 
                   onChange={(e) => {
-                    handleSelectTeamToImport(e.target.value);
+                    handleImportSessionById(e.target.value);
                     e.target.value = "";
                   }} 
                   defaultValue="" 
-                  className="bg-[#222] border border-gray-600 text-xs p-1.5 text-white rounded font-bold cursor-pointer"
+                  className="bg-[#222] border border-gray-600 text-xs p-1.5 text-white rounded font-bold cursor-pointer max-w-[200px]"
                 >
-                  <option value="" disabled>Selecionar Escalão...</option>
-                  {teams.map(t => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
-                  ))}
+                  <option value="" disabled>Selecione um treino...</option>
+                  {teams.map(t => {
+                    const tSessions = sessions.filter(s => s.teamId === t.id);
+                    if (tSessions.length === 0) return null;
+                    return (
+                      <optgroup key={t.id} label={t.name}>
+                        {tSessions.map(s => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                      </optgroup>
+                    );
+                  })}
                 </select>
               </div>
             </div>
