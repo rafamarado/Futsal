@@ -40,10 +40,10 @@ const EQUIPAS_INICIAIS = [
 ];
 
 const EXERCICIOS_INICIAIS = [
-  { id: '1', name: 'Agachamento com Barra', mediaUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=800' },
-  { id: '2', name: 'Peso Morto Hex Bar', mediaUrl: 'https://images.unsplash.com/photo-1603892853112-a957241dc4ff?q=80&w=800' },
-  { id: '3', name: 'Supino Reto', mediaUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800' },
-  { id: '4', name: 'Salto para Caixa (Plyo)', mediaUrl: 'https://images.unsplash.com/photo-1599058917212-d750089bc07e?q=80&w=800' }
+  { id: '1', name: 'Agachamento com Barra', mediaUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=800', mediaType: 'image' },
+  { id: '2', name: 'Peso Morto Hex Bar', mediaUrl: 'https://images.unsplash.com/photo-1603892853112-a957241dc4ff?q=80&w=800', mediaType: 'image' },
+  { id: '3', name: 'Supino Reto', mediaUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800', mediaType: 'image' },
+  { id: '4', name: 'Salto para Caixa (Plyo)', mediaUrl: 'https://images.unsplash.com/photo-1599058917212-d750089bc07e?q=80&w=800', mediaType: 'image' }
 ];
 
 const SESSOES_INICIAIS = [
@@ -66,28 +66,55 @@ const SESSOES_INICIAIS = [
 
 const IMAGEM_PADRAO = 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=800';
 
-// Componente inteligente para renderizar Imagem ou Vídeo (mp4/webm ou links genéricos)
-function MediaViewer({ src, alt, className }) {
-  const isVideo = src && (src.includes('.mp4') || src.includes('.webm') || src.includes('.ogg') || src.includes('video/'));
+// Componente inteligente para renderizar com suporte explícito a Imagem ou Vídeo (.mp4 / YouTube embed)
+function MediaViewer({ src, mediaType, alt, className }) {
+  const url = src || IMAGEM_PADRAO;
+  const type = mediaType || (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('.mp4') ? 'video' : 'image');
 
-  if (isVideo) {
+  if (type === 'video') {
+    // Tratamento para links do YouTube
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      let videoId = '';
+      if (url.includes('youtu.be/')) {
+        videoId = url.split('youtu.be/')[1]?.split('?')[0];
+      } else if (url.includes('watch?v=')) {
+        videoId = url.split('watch?v=')[1]?.split('&')[0];
+      } else if (url.includes('embed/')) {
+        videoId = url.split('embed/')[1]?.split('?')[0];
+      }
+
+      if (videoId) {
+        return (
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}`}
+            title={alt || 'Vídeo do Exercício'}
+            className={`${className} border-0`}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        );
+      }
+    }
+
+    // Vídeo direto (mp4 / webm)
     return (
-      <video 
-        src={src} 
-        autoPlay 
-        loop 
-        muted 
-        playsInline 
+      <video
+        src={url}
+        autoPlay
+        loop
+        muted
+        playsInline
         className={`${className} object-cover`}
       />
     );
   }
 
+  // Imagem normal
   return (
-    <img 
-      src={src || IMAGEM_PADRAO} 
-      alt={alt || 'Exercício'} 
-      className={`${className} object-cover`} 
+    <img
+      src={url}
+      alt={alt || 'Exercício'}
+      className={`${className} object-cover`}
     />
   );
 }
@@ -137,6 +164,7 @@ export default function App() {
 
   const [newExName, setNewExName] = useState('');
   const [newExUrl, setNewExUrl] = useState('');
+  const [newExType, setNewExType] = useState('image');
   const [editingExerciseId, setEditingExerciseId] = useState(null);
 
   const FPF_LOGO = 'https://logodownload.org/wp-content/uploads/2021/10/fpf-selecao-de-portugal-logo-4.png';
@@ -302,7 +330,8 @@ export default function App() {
     const exercise = {
       id: editingExerciseId || Date.now().toString(),
       name: newExName.trim(),
-      mediaUrl: newExUrl.trim() || IMAGEM_PADRAO
+      mediaUrl: newExUrl.trim() || IMAGEM_PADRAO,
+      mediaType: newExType
     };
     const updated = editingExerciseId 
       ? exercises.map(item => item.id === editingExerciseId ? exercise : item) 
@@ -311,6 +340,7 @@ export default function App() {
     saveExercisesToCloud(updated);
     setNewExName('');
     setNewExUrl('');
+    setNewExType('image');
     setEditingExerciseId(null);
   };
 
@@ -373,7 +403,12 @@ export default function App() {
         ...variation,
         routine: variation.routine.map(item => {
           const exercise = exercises.find(e => e.id === item.exerciseId);
-          return { ...item, name: exercise?.name || 'Exercício', mediaUrl: exercise?.mediaUrl || IMAGEM_PADRAO };
+          return { 
+            ...item, 
+            name: exercise?.name || 'Exercício', 
+            mediaUrl: exercise?.mediaUrl || IMAGEM_PADRAO,
+            mediaType: exercise?.mediaType || 'image'
+          };
         })
       }))
     };
@@ -415,7 +450,7 @@ export default function App() {
                       const groupId = groups[index];
                       return (
                         <article key={index} className={`flex items-center gap-4 overflow-hidden border-l-4 bg-[#222] p-4 rounded shadow-md ${groupId ? 'border-[#d1a153] bg-gradient-to-r from-[#d1a153]/10 to-transparent' : 'border-[#8a152e]'}`}>
-                          <MediaViewer src={item.mediaUrl} alt={item.name} className="h-20 w-20 rounded-md border border-gray-700" />
+                          <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="h-24 w-24 rounded-md border border-gray-700 shrink-0" />
                           <div className="flex-1">
                             <h4 className="font-bold text-white uppercase">{item.name}</h4>
                             <p className="text-sm text-gray-400 mt-1">
@@ -467,75 +502,3 @@ export default function App() {
           {[
             ['live', '📺', 'Gestão de Sessões'],
             ['tv_display', '🖥️', 'Transmissão (Modo TV)'],
-            ['builder', '📋', 'Criar Novo Treino'],
-            ['database', '🏋️', 'Base de Exercícios']
-          ].map(([tab, icon, label]) => (
-            <button key={tab} onClick={() => setActiveTab(tab)} className={`w-full rounded px-4 py-3 text-left font-semibold ${activeTab === tab ? 'bg-[#8a152e] text-white' : 'text-gray-400 hover:bg-gray-900 hover:text-white'}`}>
-              <span className="mr-3">{icon}</span>{label}
-            </button>
-          ))}
-        </nav>
-
-        <div className="p-4 border-t border-gray-800 bg-[#080808]">
-          <p className="text-[11px] text-gray-400 truncate mb-2">Sessão: {user.email}</p>
-          <button onClick={handleLogout} className="w-full rounded bg-red-900/60 hover:bg-red-900 px-3 py-2 text-xs font-bold uppercase tracking-wider text-red-200">
-            Terminar Sessão
-          </button>
-        </div>
-      </aside>
-
-      <div className="relative flex flex-1 flex-col overflow-y-auto" style={{ backgroundImage: 'radial-gradient(circle at top right, #5A162433, #121212 60%)' }}>
-        <header className="border-b border-gray-800 bg-[#121212]/80 px-8 py-6 flex justify-between items-center">
-          <div>
-            <h2 className="text-3xl font-black uppercase">{activeTeam.name}</h2>
-            <p className="text-xs font-bold uppercase tracking-wide text-[#d1a153]">Consola de Controlo de Treino</p>
-          </div>
-        </header>
-
-        {activeTab === 'live' && (
-          <main className="flex-1 p-8">
-            <section className="mb-8 border border-gray-700 bg-[#181818] p-6 text-center">
-              {liveSession ? (
-                <>
-                  <p className="mb-2 font-bold uppercase text-green-400">Sessão ativa no ecrã</p>
-                  <h3 className="mb-5 text-3xl font-black uppercase">{liveSession.name}</h3>
-                  <div className="flex justify-center gap-3">
-                    <button onClick={() => setActiveTab('tv_display')} className="bg-[#d1a153] px-5 py-3 font-bold uppercase text-black">Abrir ecrã de transmissão</button>
-                    <button onClick={() => setLiveSession(null)} className="bg-[#8a152e] px-5 py-3 font-bold uppercase">Parar transmissão</button>
-                  </div>
-                </>
-              ) : (
-                <p className="font-bold text-gray-400">Nenhuma sessão em transmissão</p>
-              )}
-            </section>
-
-            <div className="mb-4 flex items-center justify-between border-b border-gray-800 pb-3">
-              <h3 className="font-bold uppercase">Sessões disponíveis para {activeTeam.name}</h3>
-              <button onClick={() => { resetSessionForm(); setActiveTab('builder'); }} className="bg-[#d1a153] px-4 py-2 text-sm font-black uppercase text-black">+ Criar treino</button>
-            </div>
-
-            {teamSessions.length === 0 ? (
-              <p className="bg-[#1a1a1a] p-8 text-center text-gray-400">Ainda não existem sessões para esta equipa.</p>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                {teamSessions.map((session) => (
-                  <article key={session.id} className="flex flex-wrap items-center justify-between gap-4 border border-gray-800 bg-[#1a1a1a] p-5">
-                    <div>
-                      <h4 className="text-lg font-black uppercase">{session.name}</h4>
-                      <p className="mt-1 text-sm text-gray-400">{session.variations.length} variações</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <button onClick={() => handleEditSession(session)} className="bg-gray-700 px-3 py-2 text-sm font-bold hover:bg-gray-600">Editar</button>
-                      <button onClick={() => castToTV(session)} className="bg-[#d1a153] px-3 py-2 text-sm font-black uppercase text-black">Transmitir</button>
-                      <button onClick={() => handleDeleteSession(session.id)} className="bg-red-900 px-3 py-2 text-sm font-bold">Eliminar</button>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-          </main>
-        )}
-
-        {activeTab === 'builder' && (
-          <main className="max-w-6xl flex-1 p-8">
-            <h3 className="mb-5 text-2xl
