@@ -533,68 +533,71 @@ export default function App() {
   if (activeTab === 'tv_display') {
     return (
       <div className="flex h-screen w-screen flex-col bg-[#111] text-white overflow-hidden">
-        <header className="flex items-center justify-between border-b border-gray-800 bg-[#161616] px-8 py-4 shrink-0">
+        <header className="flex items-center justify-between border-b border-gray-800 bg-[#161616] px-8 py-3 shrink-0">
           <div className="flex items-center gap-3">
-            <img src={FPF_LOGO} alt="FPF" className="h-10 w-10 object-contain" />
+            <img src={FPF_LOGO} alt="FPF" className="h-8 w-8 object-contain" />
             <div>
-              <h1 className="text-xl font-black uppercase text-[#d1a153]">{liveSession?.name || 'GYM FLOOR STANDBY'}</h1>
-              <p className="text-xs font-bold uppercase text-gray-400">{liveSession && liveSession.teamName}</p>
+              <h1 className="text-lg font-black uppercase text-[#d1a153]">{liveSession?.name || 'GYM FLOOR STANDBY'}</h1>
+              <p className="text-[11px] font-bold uppercase text-gray-400">{liveSession && liveSession.teamName}</p>
             </div>
           </div>
-          <button onClick={() => setActiveTab('live')} className="rounded border border-gray-600 bg-gray-800 px-5 py-2 font-black uppercase hover:bg-gray-700 text-xs">
+          <button onClick={() => setActiveTab('live')} className="rounded border border-gray-600 bg-gray-800 px-4 py-1.5 font-black uppercase hover:bg-gray-700 text-xs">
             Voltar ao Painel
           </button>
         </header>
         
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-hidden p-4">
           {!liveSession ? (
             <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
               <p className="text-lg font-bold text-gray-400">A aguardar seleção de treino</p>
               <button onClick={() => setActiveTab('live')} className="rounded bg-[#8a152e] px-6 py-3 font-bold uppercase">Escolher sessão</button>
             </div>
           ) : (
-            <div className="grid h-full w-full gap-6 items-start" style={{ gridTemplateColumns: `repeat(${liveSession.variations.length}, minmax(0, 1fr))` }}>
+            <div className="grid h-full w-full gap-4 items-stretch" style={{ gridTemplateColumns: `repeat(${liveSession.variations.length}, minmax(0, 1fr))` }}>
               {liveSession.variations.map((variation) => {
                 const groups = getSupersetGroupIds(variation.routine);
                 return (
-                  <div key={variation.id} className="flex flex-col gap-5 overflow-y-auto bg-[#181818] p-5 border border-gray-800 rounded-xl">
-                    <h3 className="text-center text-xl font-black uppercase text-[#d1a153] tracking-wider sticky top-0 bg-[#181818] py-2 z-10 border-b border-gray-800">{variation.name}</h3>
-                    {variation.routine.map((item, index) => {
-                      const groupId = groups[index];
-                      return (
-                        <article key={index} className={`flex flex-col overflow-hidden border-l-4 bg-[#222] rounded-xl shadow-2xl ${groupId ? 'border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-[#8a152e]'}`}>
-                          <div className="w-full aspect-video bg-black shrink-0 border-b border-gray-700 relative overflow-hidden">
-                            <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="w-full h-full object-cover" />
-                          </div>
-                          
-                          <div className="p-4 flex flex-col gap-2.5">
-                            <div className="flex items-start justify-between gap-2">
-                              <h4 className="text-base sm:text-lg font-black text-white uppercase tracking-wide leading-tight">{item.name}</h4>
-                              {groupId && (
-                                <span className="bg-[#d1a153]/20 text-[#d1a153] border border-[#d1a153]/40 px-2 py-0.5 rounded text-[9px] font-black uppercase shrink-0">
-                                  🔗 Supersérie
-                                </span>
+                  <div key={variation.id} className="flex flex-col h-full overflow-hidden bg-[#181818] p-3 border border-gray-800 rounded-xl">
+                    <h3 className="text-center text-sm font-black uppercase text-[#d1a153] tracking-wider py-1 mb-2 shrink-0 border-b border-gray-800">{variation.name}</h3>
+                    
+                    <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+                      {variation.routine.map((item, index) => {
+                        const groupId = groups[index];
+                        return (
+                          <article key={index} className={`flex flex-col overflow-hidden border-l-4 bg-[#222] rounded-lg shadow-lg shrink-0 ${groupId ? 'border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-[#8a152e]'}`}>
+                            <div className="w-full aspect-video bg-black shrink-0 border-b border-gray-700 relative overflow-hidden">
+                              <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="w-full h-full object-cover" />
+                            </div>
+                            
+                            <div className="p-3 flex flex-col gap-2">
+                              <div className="flex items-start justify-between gap-2">
+                                <h4 className="text-sm font-black text-white uppercase tracking-wide leading-tight">{item.name}</h4>
+                                {groupId && (
+                                  <span className="bg-[#d1a153]/20 text-[#d1a153] border border-[#d1a153]/40 px-1.5 py-0.5 rounded text-[8px] font-black uppercase shrink-0">
+                                    🔗 Supersérie
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold text-gray-300 bg-[#191919] p-2 rounded border border-gray-800">
+                                <span className="text-[#d1a153]">{item.sets} Séries</span>
+                                <span>•</span>
+                                <span>{item.reps} Reps</span>
+                                <span>•</span>
+                                <span>{item.rest}s Descanso</span>
+                              </div>
+
+                              {item.notes && (
+                                <p className="text-[11px] text-yellow-300 font-bold bg-yellow-950/40 p-2 rounded border border-yellow-600/30 flex items-start gap-1">
+                                  <span>📝</span>
+                                  <span className="flex-1">{item.notes}</span>
+                                </p>
                               )}
                             </div>
-
-                            <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-bold text-gray-300 bg-[#191919] p-2.5 rounded-lg border border-gray-800">
-                              <span className="text-[#d1a153]">{item.sets} Séries</span>
-                              <span>•</span>
-                              <span>{item.reps} Reps</span>
-                              <span>•</span>
-                              <span>{item.rest}s Descanso</span>
-                            </div>
-
-                            {item.notes && (
-                              <p className="text-xs text-yellow-300 font-bold bg-yellow-950/40 p-2.5 rounded-lg border border-yellow-600/30 flex items-start gap-1.5">
-                                <span>📝</span>
-                                <span className="flex-1">{item.notes}</span>
-                              </p>
-                            )}
-                          </div>
-                        </article>
-                      );
-                    })}
+                          </article>
+                        );
+                      })}
+                    </div>
                   </div>
                 );
               })}
@@ -704,21 +707,22 @@ export default function App() {
             <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
               <h3 className="text-2xl font-black uppercase text-[#d1a153]">{editingSessionId ? 'Editar treino' : 'Criar treino'}</h3>
               
-              {!editingSessionId && (
-                <div className="flex items-center gap-2 bg-[#1a1a1a] p-2 border border-gray-700 rounded">
-                  <span className="text-xs font-bold uppercase text-gray-400">Importar de:</span>
-                  <select 
-                    onChange={(e) => handleImportSessionFromTeam(e.target.value)} 
-                    defaultValue="" 
-                    className="bg-[#222] border border-gray-600 text-xs p-1.5 text-white rounded font-bold"
-                  >
-                    <option value="" disabled>Selecionar Escalão...</option>
-                    {teams.filter(t => t.id !== activeTeam.id).map(t => (
-                      <option key={t.id} value={t.id}>{t.name}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              <div className="flex items-center gap-2 bg-[#1a1a1a] p-2 border border-gray-700 rounded">
+                <span className="text-xs font-bold uppercase text-gray-400">Importar de:</span>
+                <select 
+                  onChange={(e) => {
+                    handleImportSessionFromTeam(e.target.value);
+                    e.target.value = "";
+                  }} 
+                  defaultValue="" 
+                  className="bg-[#222] border border-gray-600 text-xs p-1.5 text-white rounded font-bold cursor-pointer"
+                >
+                  <option value="" disabled>Selecionar Escalão...</option>
+                  {teams.map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <form onSubmit={handleSaveSession} className="space-y-6 border border-gray-800 bg-[#181818] p-6">
