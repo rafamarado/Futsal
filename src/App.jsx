@@ -188,7 +188,7 @@ export default function App() {
   const [statusMessage, setStatusMessage] = useState('');
 
   const [activeTab, setActiveTab] = useState('live');
-  const [teams, setTeams] = useState(EQUIPAS_INICIAIS);
+  const [teams] = useState(EQUIPAS_INICIAIS);
   const [exercises, setExercises] = useState(EXERCICIOS_INICIAIS);
   const [sessions, setSessions] = useState(SESSOES_INICIAIS);
   const [liveSession, setLiveSession] = useState(null);
@@ -233,8 +233,7 @@ export default function App() {
         setExercises(docSnap.data().list);
       }
     }, (err) => {
-      console.warn("Erro ao ler exercícios do Firestore:", err);
-      setStatusMessage('❌ Erro de permissão/leitura no Firestore.');
+      console.warn("Erro ao ler exercícios:", err);
     });
 
     const unsubSessions = onSnapshot(doc(db, 'futsal_hub', 'sessions'), (docSnap) => {
@@ -242,8 +241,7 @@ export default function App() {
         setSessions(docSnap.data().list);
       }
     }, (err) => {
-      console.warn("Erro ao ler sessões do Firestore:", err);
-      setStatusMessage('❌ Erro de permissão/leitura no Firestore.');
+      console.warn("Erro ao ler sessões:", err);
     });
 
     return () => {
@@ -257,11 +255,10 @@ export default function App() {
     if (db) {
       try {
         await setDoc(doc(db, 'futsal_hub', 'exercises'), { list: newExercises });
-        setStatusMessage('✅ Exercícios guardados na cloud!');
-        setTimeout(() => setStatusMessage(''), 3000);
+        setStatusMessage('✅ Exercícios guardados!');
+        setTimeout(() => setStatusMessage(''), 2000);
       } catch (e) {
         console.error("Erro ao guardar exercícios:", e);
-        setStatusMessage('❌ Erro ao gravar exercícios (ver consola).');
       }
     }
   };
@@ -271,11 +268,11 @@ export default function App() {
     if (db) {
       try {
         await setDoc(doc(db, 'futsal_hub', 'sessions'), { list: newSessions });
-        setStatusMessage('✅ Sessão guardada na cloud!');
-        setTimeout(() => setStatusMessage(''), 3000);
+        setStatusMessage('✅ Sessão guardada com sucesso!');
+        setTimeout(() => setStatusMessage(''), 2000);
       } catch (e) {
         console.error("Erro ao guardar sessões:", e);
-        setStatusMessage('❌ Erro ao gravar sessão (verifique as Regras).');
+        setStatusMessage('❌ Erro ao gravar sessão.');
       }
     }
   };
@@ -290,7 +287,7 @@ export default function App() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (err) {
-      setLoginError('Credenciais inválidas. Verifique o e-mail e a palavra-passe.');
+      setLoginError('Credenciais inválidas.');
     }
   };
 
@@ -378,6 +375,7 @@ export default function App() {
       mediaUrl: urlClean || IMAGEM_PADRAO,
       mediaType: computedType
     };
+
     const updated = editingExerciseId 
       ? exercises.map(item => item.id === editingExerciseId ? exercise : item) 
       : [...exercises, exercise];
@@ -395,7 +393,7 @@ export default function App() {
   };
 
   const handleAddVariation = () => {
-    setVariations([...variations, { id: Date.now().toString(), name: `Versão V${variations.length + 1}`, routine: [criarItemRotina(exercises[0]?.id || '')] }]);
+    setVariations([...variations, { id: `v-${Date.now()}`, name: `Versão V${variations.length + 1}`, routine: [criarItemRotina(exercises[0]?.id || '')] }]);
   };
 
   const handleAddExerciseToVariation = (variationIndex) => {
@@ -418,30 +416,54 @@ export default function App() {
     setEditingSessionId(session.id);
     setActiveTeamId(session.teamId);
     setNewSessionName(session.name);
-    setVariations(session.variations.map(v => ({ ...v, routine: v.routine.map(i => ({ ...i })) })));
+    setVariations(session.variations.map(v => ({ 
+      id: v.id || `v-${Date.now()}`, 
+      name: v.name, 
+      routine: v.routine.map(i => ({ ...i })) 
+    })));
     setActiveTab('builder');
   };
 
+  // Salvamento seguro e imutável baseado no estado funcional atual
   const handleSaveSession = (event) => {
     event.preventDefault();
     if (!newSessionName.trim()) return;
-    
-    let updated;
-    if (editingSessionId) {
-      updated = sessions.map(s => s.id === editingSessionId ? { ...s, teamId: activeTeam.id, name: newSessionName.trim(), variations } : s);
-    } else {
-      const newSession = { id: Date.now().toString(), teamId: activeTeam.id, name: newSessionName.trim(), variations };
-      updated = [...sessions, newSession];
-    }
 
-    saveSessionsToCloud(updated);
+    setSessions(prevSessions => {
+      let updated;
+      if (editingSessionId) {
+        updated = prevSessions.map(s => s.id === editingSessionId ? {
+          ...s,
+          teamId: activeTeam.id,
+          name: newSessionName.trim(),
+          variations: variations
+        } : s);
+      } else {
+        const newSession = {
+          id: `s-${Date.now()}`,
+          teamId: activeTeam.id,
+          name: newSessionName.trim(),
+          variations: variations
+        };
+        updated = [...prevSessions, newSession];
+      }
+      
+      saveSessionsToCloud(updated);
+      return updated;
+    });
+
     resetSessionForm();
     setActiveTab('live');
   };
 
+  // Eliminação estritamente segura baseada no ID exato
   const handleDeleteSession = (sessionId) => {
-    const updated = sessions.filter(s => s.id !== sessionId);
-    saveSessionsToCloud(updated);
+    setSessions(prevSessions => {
+      const updated = prevSessions.filter(s => s.id !== sessionId);
+      saveSessionsToCloud(updated);
+      return updated;
+    });
+
     if (liveSession && liveSession.id === sessionId) {
       setLiveSession(null);
     }
