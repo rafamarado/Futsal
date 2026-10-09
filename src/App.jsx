@@ -425,10 +425,14 @@ export default function App() {
   const handleSaveSession = (event) => {
     event.preventDefault();
     if (!newSessionName.trim()) return;
-    const session = { id: editingSessionId || Date.now().toString(), teamId: activeTeam.id, name: newSessionName.trim(), variations };
-    const updated = editingExerciseId 
-      ? sessions.map(s => s.id === editingSessionId ? session : s) 
-      : [...sessions, session];
+    
+    let updated;
+    if (editingSessionId) {
+      updated = sessions.map(s => s.id === editingSessionId ? { ...s, teamId: activeTeam.id, name: newSessionName.trim(), variations } : s);
+    } else {
+      const newSession = { id: Date.now().toString(), teamId: activeTeam.id, name: newSessionName.trim(), variations };
+      updated = [...sessions, newSession];
+    }
 
     saveSessionsToCloud(updated);
     resetSessionForm();
@@ -438,6 +442,9 @@ export default function App() {
   const handleDeleteSession = (sessionId) => {
     const updated = sessions.filter(s => s.id !== sessionId);
     saveSessionsToCloud(updated);
+    if (liveSession && liveSession.id === sessionId) {
+      setLiveSession(null);
+    }
   };
 
   const castToTV = (session) => {
@@ -496,7 +503,6 @@ export default function App() {
                       const groupId = groups[index];
                       return (
                         <article key={index} className={`flex flex-col overflow-hidden border-l-4 bg-[#222] rounded-xl shadow-2xl ${groupId ? 'border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-[#8a152e]'}`}>
-                          {/* Mídia ampliada em destaque no topo do cartão */}
                           <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="w-full h-72 bg-black shrink-0 border-b border-gray-700" />
                           
                           <div className="p-5 flex flex-col gap-3">
