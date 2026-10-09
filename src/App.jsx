@@ -73,12 +73,14 @@ function getYouTubeId(url) {
   return (match && match[2].length >= 10) ? match[2] : null;
 }
 
-// Componente interativo para reproduzir vídeo ao clicar ou exibir miniatura
+// Componente visual unificado e inteligente para gerir miniaturas e reprodução de vídeos do YouTube e imagens
 function MediaViewer({ src, mediaType, alt, className }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasError, setHasError] = useState(false);
+  
   const url = src || IMAGEM_PADRAO;
-  const type = mediaType || (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('.mp4') ? 'video' : 'image');
+  const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
+  const type = mediaType || (isYouTube || url.includes('.mp4') ? 'video' : 'image');
 
   if (hasError || !url.trim()) {
     return (
@@ -88,7 +90,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
     );
   }
 
-  if (type === 'video') {
+  if (type === 'video' || isYouTube) {
     const ytId = getYouTubeId(url);
     if (ytId) {
       if (isPlaying) {
@@ -103,7 +105,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
             />
             <button 
               onClick={(e) => { e.stopPropagation(); setIsPlaying(false); }}
-              className="absolute top-1 right-1 bg-black/70 hover:bg-red-900 text-white rounded px-1.5 py-0.5 text-[10px] font-bold z-10"
+              className="absolute top-1 right-1 bg-black/80 hover:bg-red-900 text-white rounded px-1.5 py-0.5 text-[10px] font-bold z-10"
             >
               ✕ Fechar
             </button>
@@ -125,7 +127,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
             onError={() => setHasError(true)}
           />
           <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 flex items-center justify-center transition">
-            <div className="bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg text-xs font-black pl-0.5 group-hover:scale-110 transition">
+            <div className="bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center shadow-lg text-xs font-black pl-0.5 group-hover:scale-110 transition">
               ▶
             </div>
           </div>
@@ -365,11 +367,17 @@ export default function App() {
   const handleAddExercise = (event) => {
     event.preventDefault();
     if (!newExName.trim()) return;
+    
+    // Auto-deteta o tipo de média com base no URL introduzido
+    const urlClean = newExUrl.trim();
+    const isYt = urlClean.includes('youtube.com') || urlClean.includes('youtu.be');
+    const computedType = isYt || urlClean.includes('.mp4') ? 'video' : (newExType || 'image');
+
     const exercise = {
       id: editingExerciseId || Date.now().toString(),
       name: newExName.trim(),
-      mediaUrl: newExUrl.trim() || IMAGEM_PADRAO,
-      mediaType: newExType
+      mediaUrl: urlClean || IMAGEM_PADRAO,
+      mediaType: computedType
     };
     const updated = editingExerciseId 
       ? exercises.map(item => item.id === editingExerciseId ? exercise : item) 
@@ -695,15 +703,8 @@ export default function App() {
                   <input required value={newExName} onChange={(e) => setNewExName(e.target.value)} className="mt-1 w-full border border-gray-700 bg-[#111] p-3 text-white" placeholder="Ex: Prancha" />
                 </label>
                 <label className="block text-xs font-bold uppercase text-gray-400">
-                  Tipo de Média
-                  <select value={newExType} onChange={(e) => setNewExType(e.target.value)} className="mt-1 w-full border border-gray-700 bg-[#111] p-3 text-white font-bold">
-                    <option value="image">🖼️ Imagem (URL)</option>
-                    <option value="video">🎥 Vídeo (MP4 / YouTube)</option>
-                  </select>
-                </label>
-                <label className="block text-xs font-bold uppercase text-gray-400">
-                  URL da Média (Imagem ou Vídeo)
-                  <input type="url" required value={newExUrl} onChange={(e) => setNewExUrl(e.target.value)} className="mt-1 w-full border border-gray-700 bg-[#111] p-3 text-white" placeholder={newExType === 'video' ? 'https://... ou link do YouTube' : 'https://...'} />
+                  URL da Média (Imagem, GIF ou YouTube)
+                  <input type="text" required value={newExUrl} onChange={(e) => setNewExUrl(e.target.value)} className="mt-1 w-full border border-gray-700 bg-[#111] p-3 text-white" placeholder="https://... ou link do YouTube" />
                 </label>
                 <button type="submit" className="w-full bg-[#d1a153] py-3 font-black uppercase text-black">{editingExerciseId ? 'Guardar alterações' : 'Adicionar exercício'}</button>
               </form>
@@ -717,7 +718,7 @@ export default function App() {
                     <div className="min-w-0 flex-1">
                       <h4 className="truncate font-bold uppercase">{exercise.name}</h4>
                       <span className="text-[10px] text-gray-400 uppercase bg-gray-800 px-1.5 py-0.5 rounded">
-                        {exercise.mediaType === 'video' ? '🎥 Vídeo' : '🖼️ Imagem'}
+                        {exercise.mediaUrl && (exercise.mediaUrl.includes('youtube.com') || exercise.mediaUrl.includes('youtu.be') || exercise.mediaUrl.includes('.mp4')) ? '🎥 Vídeo' : '🖼️ Imagem'}
                       </span>
                     </div>
                     <div className="flex gap-1">
