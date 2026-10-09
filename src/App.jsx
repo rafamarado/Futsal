@@ -34,9 +34,33 @@ try {
 }
 
 const EQUIPAS_INICIAIS = [
-  { id: 't1', name: 'Equipa Principal' },
-  { id: 't2', name: 'Sub-21' },
-  { id: 't3', name: 'Equipa Feminina' }
+  { id: 'principal', name: 'Equipa Principal' },
+  { id: 'amaf', name: 'AMAF' },
+  { id: 'sub23m', name: 'Sub-23 M' },
+  { id: 'sub20m', name: 'Sub-20 M' },
+  { id: 'sub19m', name: 'Sub-19 M' },
+  { id: 'sub18m', name: 'Sub-18 M' },
+  { id: 'sub17m', name: 'Sub-17 M' },
+  { id: 'sub16m', name: 'Sub-16 M' },
+  { id: 'sub15m', name: 'Sub-15 M' },
+  { id: 'sub14m', name: 'Sub-14 M' },
+  { id: 'sub13m', name: 'Sub-13 M' },
+  { id: 'sub12m', name: 'Sub-12 M' },
+  { id: 'sub11m', name: 'Sub-11 M' },
+  { id: 'sub10m', name: 'Sub-10 M' },
+  { id: 'sub23f', name: 'Sub-23 F' },
+  { id: 'sub20f', name: 'Sub-20 F' },
+  { id: 'sub19f', name: 'Sub-19 F' },
+  { id: 'sub18f', name: 'Sub-18 F' },
+  { id: 'sub17f', name: 'Sub-17 F' },
+  { id: 'sub16f', name: 'Sub-16 F' },
+  { id: 'sub15f', name: 'Sub-15 F' },
+  { id: 'sub14f', name: 'Sub-14 F' },
+  { id: 'sub13f', name: 'Sub-13 F' },
+  { id: 'sub12f', name: 'Sub-12 F' },
+  { id: 'sub11f', name: 'Sub-11 F' },
+  { id: 'sub10f', name: 'Sub-10 F' },
+  { id: 'fem', name: 'Equipa Feminina' }
 ];
 
 const EXERCICIOS_INICIAIS = [
@@ -49,7 +73,7 @@ const EXERCICIOS_INICIAIS = [
 const SESSOES_INICIAIS = [
   {
     id: 's1',
-    teamId: 't1',
+    teamId: 'principal',
     name: 'Ativação & Força Máxima (-2)',
     variations: [
       {
@@ -73,7 +97,6 @@ function getYouTubeId(url) {
   return (match && match[2].length >= 10) ? match[2] : null;
 }
 
-// Componente visual unificado e interativo para reproduzir vídeos e imagens
 function MediaViewer({ src, mediaType, alt, className }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -467,6 +490,24 @@ export default function App() {
     }
   };
 
+  // Função para importar/copiar treino de outro escalão
+  const handleImportSessionFromTeam = (sourceTeamId) => {
+    if (!sourceTeamId) return;
+    const foundSession = sessions.find(s => s.teamId === sourceTeamId);
+    if (!foundSession) {
+      alert("O escalão selecionado não tem nenhum treino guardado para importar.");
+      return;
+    }
+    setNewSessionName(foundSession.name + ' (Cópia)');
+    setVariations(foundSession.variations.map(v => ({
+      id: `v-${Date.now()}-${Math.random()}`,
+      name: v.name,
+      routine: v.routine.map(i => ({ ...i }))
+    })));
+    setStatusMessage('📋 Treino importado com sucesso!');
+    setTimeout(() => setStatusMessage(''), 3000);
+  };
+
   const castToTV = (session) => {
     const populatedSession = {
       ...session,
@@ -523,7 +564,6 @@ export default function App() {
                       const groupId = groups[index];
                       return (
                         <article key={index} className={`flex flex-col overflow-hidden border-l-4 bg-[#222] rounded-xl shadow-2xl ${groupId ? 'border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-[#8a152e]'}`}>
-                          {/* Altura fluida controlada por aspect-ratio e sem esmagar o texto */}
                           <div className="w-full aspect-video bg-black shrink-0 border-b border-gray-700 relative overflow-hidden">
                             <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="w-full h-full object-cover" />
                           </div>
@@ -581,13 +621,13 @@ export default function App() {
         )}
 
         <div className="border-b border-gray-800 p-4 bg-[#161616]">
-          <label className="mb-2 block text-xs font-bold uppercase text-gray-400">Seleção / Equipa</label>
-          <select value={activeTeam.id} onChange={(e) => setActiveTeamId(e.target.value)} className="w-full rounded border border-gray-700 bg-[#222] p-2 font-bold text-white">
+          <label className="mb-2 block text-xs font-bold uppercase text-gray-400">Seleção / Escalão</label>
+          <select value={activeTeam.id} onChange={(e) => setActiveTeamId(e.target.value)} className="w-full rounded border border-gray-700 bg-[#222] p-2 font-bold text-white text-sm max-h-48 overflow-y-auto">
             {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
         </div>
 
-        <nav className="flex-1 space-y-2 p-4">
+        <nav className="flex-1 space-y-2 p-4 overflow-y-auto">
           {[
             ['live', '📺', 'Gestão de Sessões'],
             ['tv_display', '🖥️', 'Transmissão (Modo TV)'],
@@ -639,7 +679,7 @@ export default function App() {
             </div>
 
             {teamSessions.length === 0 ? (
-              <p className="bg-[#1a1a1a] p-8 text-center text-gray-400">Ainda não existem sessões para esta equipa.</p>
+              <p className="bg-[#1a1a1a] p-8 text-center text-gray-400">Ainda não existem sessões para este escalão.</p>
             ) : (
               <div className="grid gap-4 md:grid-cols-2">
                 {teamSessions.map((session) => (
@@ -662,7 +702,27 @@ export default function App() {
 
         {activeTab === 'builder' && (
           <main className="max-w-6xl flex-1 p-8">
-            <h3 className="mb-5 text-2xl font-black uppercase text-[#d1a153]">{editingSessionId ? 'Editar treino' : 'Criar treino'}</h3>
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
+              <h3 className="text-2xl font-black uppercase text-[#d1a153]">{editingSessionId ? 'Editar treino' : 'Criar treino'}</h3>
+              
+              {/* Seletor para Importar treino de outro Escalão */}
+              {!editingSessionId && (
+                <div className="flex items-center gap-2 bg-[#1a1a1a] p-2 border border-gray-700 rounded">
+                  <span className="text-xs font-bold uppercase text-gray-400">Importar de:</span>
+                  <select 
+                    onChange={(e) => handleImportSessionFromTeam(e.target.value)} 
+                    defaultValue="" 
+                    className="bg-[#222] border border-gray-600 text-xs p-1.5 text-white rounded font-bold"
+                  >
+                    <option value="" disabled>Selecionar Escalão...</option>
+                    {teams.filter(t => t.id !== activeTeam.id).map(t => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
             <form onSubmit={handleSaveSession} className="space-y-6 border border-gray-800 bg-[#181818] p-6">
               <label className="block text-sm font-bold uppercase text-gray-400">
                 Nome da sessão
@@ -745,7 +805,8 @@ export default function App() {
                   Nome do exercício
                   <input required value={newExName} onChange={(e) => setNewExName(e.target.value)} className="mt-1 w-full border border-gray-700 bg-[#111] p-3 text-white" placeholder="Ex: Prancha" />
                 </label>
-                <label className="block text-xs font-bold uppercase text-gray-400">URL da Média (Imagem, GIF ou YouTube)</label>
+                <label className="block text-xs font-bold uppercase text-gray-400">
+                  URL da Média (Imagem, GIF ou YouTube)
                   <input type="text" required value={newExUrl} onChange={(e) => setNewExUrl(e.target.value)} className="mt-1 w-full border border-gray-700 bg-[#111] p-3 text-white" placeholder="https://... ou link do YouTube" />
                 </label>
                 <button type="submit" className="w-full bg-[#d1a153] py-3 font-black uppercase text-black">{editingExerciseId ? 'Guardar alterações' : 'Adicionar exercício'}</button>
