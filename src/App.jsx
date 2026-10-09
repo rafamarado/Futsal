@@ -66,7 +66,6 @@ const SESSOES_INICIAIS = [
 
 const IMAGEM_PADRAO = 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=800';
 
-// Função auxiliar totalmente robusta para extrair o ID do YouTube (suporta IDs com hífens e underscores)
 function getYouTubeId(url) {
   if (!url) return '';
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -74,8 +73,9 @@ function getYouTubeId(url) {
   return (match && match[2].length >= 10) ? match[2] : null;
 }
 
-// Componente visual inteligente com tratamento de erros de pré-visualização
+// Componente interativo para reproduzir vídeo ao clicar ou exibir miniatura
 function MediaViewer({ src, mediaType, alt, className }) {
+  const [isPlaying, setIsPlaying] = useState(false);
   const [hasError, setHasError] = useState(false);
   const url = src || IMAGEM_PADRAO;
   const type = mediaType || (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('.mp4') ? 'video' : 'image');
@@ -91,17 +91,41 @@ function MediaViewer({ src, mediaType, alt, className }) {
   if (type === 'video') {
     const ytId = getYouTubeId(url);
     if (ytId) {
+      if (isPlaying) {
+        return (
+          <div className={`relative overflow-hidden bg-black ${className}`}>
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0`}
+              title={alt || 'Vídeo YouTube'}
+              className="w-full h-full border-0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+            <button 
+              onClick={(e) => { e.stopPropagation(); setIsPlaying(false); }}
+              className="absolute top-1 right-1 bg-black/70 hover:bg-red-900 text-white rounded px-1.5 py-0.5 text-[10px] font-bold z-10"
+            >
+              ✕ Fechar
+            </button>
+          </div>
+        );
+      }
+
       const thumbUrl = `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`;
       return (
-        <div className={`relative overflow-hidden bg-black flex items-center justify-center ${className}`}>
+        <div 
+          onClick={() => setIsPlaying(true)}
+          className={`relative overflow-hidden bg-black flex items-center justify-center cursor-pointer group ${className}`}
+          title="Clique para reproduzir o vídeo"
+        >
           <img 
             src={thumbUrl} 
             alt={alt || 'Vídeo YouTube'} 
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
             onError={() => setHasError(true)}
           />
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-            <div className="bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center shadow-lg text-xs font-black pl-0.5">
+          <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 flex items-center justify-center transition">
+            <div className="bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg text-xs font-black pl-0.5 group-hover:scale-110 transition">
               ▶
             </div>
           </div>
@@ -112,6 +136,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
     return (
       <video
         src={url}
+        controls
         autoPlay
         loop
         muted
