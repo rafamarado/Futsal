@@ -225,6 +225,10 @@ export default function App() {
     { id: 'v1', name: 'Versão V1', routine: [criarItemRotina(EXERCICIOS_INICIAIS[0].id)] }
   ]);
 
+  // Estados para modal de importação
+  const [importModalTeamId, setImportModalTeamId] = useState('');
+  const [showImportModal, setShowImportModal] = useState(false);
+
   const [newExName, setNewExName] = useState('');
   const [newExUrl, setNewExUrl] = useState('');
   const [newExType, setNewExType] = useState('image');
@@ -490,19 +494,21 @@ export default function App() {
     }
   };
 
-  const handleImportSessionFromTeam = (sourceTeamId) => {
-    if (!sourceTeamId) return;
-    const foundSession = sessions.find(s => s.teamId === sourceTeamId);
-    if (!foundSession) {
-      alert("O escalão selecionado não tem nenhum treino guardado para importar.");
-      return;
-    }
-    setNewSessionName(foundSession.name + ' (Cópia)');
-    setVariations(foundSession.variations.map(v => ({
+  const handleSelectTeamToImport = (teamId) => {
+    if (!teamId) return;
+    setImportModalTeamId(teamId);
+    setShowImportModal(true);
+  };
+
+  const handleConfirmImportSession = (sessionToImport) => {
+    setNewSessionName(sessionToImport.name + ' (Cópia)');
+    setVariations(sessionToImport.variations.map(v => ({
       id: `v-${Date.now()}-${Math.random()}`,
       name: v.name,
       routine: v.routine.map(i => ({ ...i }))
     })));
+    setShowImportModal(false);
+    setImportModalTeamId('');
     setStatusMessage('📋 Treino importado com sucesso!');
     setTimeout(() => setStatusMessage(''), 3000);
   };
@@ -532,54 +538,54 @@ export default function App() {
 
   if (activeTab === 'tv_display') {
     return (
-      <div className="flex h-screen w-screen flex-col bg-[#111] text-white overflow-hidden">
-        <header className="flex items-center justify-between border-b border-gray-800 bg-[#161616] px-8 py-3 shrink-0">
+      <div className="flex h-screen w-screen flex-col bg-[#111] text-white overflow-hidden select-none">
+        <header className="flex items-center justify-between border-b border-gray-800 bg-[#161616] px-6 py-2 shrink-0 h-14">
           <div className="flex items-center gap-3">
-            <img src={FPF_LOGO} alt="FPF" className="h-8 w-8 object-contain" />
+            <img src={FPF_LOGO} alt="FPF" className="h-7 w-7 object-contain" />
             <div>
-              <h1 className="text-lg font-black uppercase text-[#d1a153]">{liveSession?.name || 'GYM FLOOR STANDBY'}</h1>
-              <p className="text-[11px] font-bold uppercase text-gray-400">{liveSession && liveSession.teamName}</p>
+              <h1 className="text-sm font-black uppercase text-[#d1a153] leading-tight">{liveSession?.name || 'GYM FLOOR STANDBY'}</h1>
+              <p className="text-[10px] font-bold uppercase text-gray-400">{liveSession && liveSession.teamName}</p>
             </div>
           </div>
-          <button onClick={() => setActiveTab('live')} className="rounded border border-gray-600 bg-gray-800 px-4 py-1.5 font-black uppercase hover:bg-gray-700 text-xs">
+          <button onClick={() => setActiveTab('live')} className="rounded border border-gray-600 bg-gray-800 px-3 py-1 font-black uppercase hover:bg-gray-700 text-[10px]">
             Voltar ao Painel
           </button>
         </header>
         
-        <div className="flex-1 overflow-hidden p-4">
+        <div className="flex-1 overflow-hidden p-3 h-[calc(100vh-3.5rem)]">
           {!liveSession ? (
             <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
               <p className="text-lg font-bold text-gray-400">A aguardar seleção de treino</p>
               <button onClick={() => setActiveTab('live')} className="rounded bg-[#8a152e] px-6 py-3 font-bold uppercase">Escolher sessão</button>
             </div>
           ) : (
-            <div className="grid h-full w-full gap-4 items-stretch" style={{ gridTemplateColumns: `repeat(${liveSession.variations.length}, minmax(0, 1fr))` }}>
+            <div className="grid h-full w-full gap-3 items-stretch" style={{ gridTemplateColumns: `repeat(${liveSession.variations.length}, minmax(0, 1fr))` }}>
               {liveSession.variations.map((variation) => {
                 const groups = getSupersetGroupIds(variation.routine);
                 return (
-                  <div key={variation.id} className="flex flex-col h-full overflow-hidden bg-[#181818] p-3 border border-gray-800 rounded-xl">
-                    <h3 className="text-center text-sm font-black uppercase text-[#d1a153] tracking-wider py-1 mb-2 shrink-0 border-b border-gray-800">{variation.name}</h3>
+                  <div key={variation.id} className="flex flex-col h-full max-h-full overflow-hidden bg-[#181818] p-2.5 border border-gray-800 rounded-xl">
+                    <h3 className="text-center text-xs font-black uppercase text-[#d1a153] tracking-wider py-1 mb-2 shrink-0 border-b border-gray-800">{variation.name}</h3>
                     
-                    <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+                    <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 min-h-0">
                       {variation.routine.map((item, index) => {
                         const groupId = groups[index];
                         return (
-                          <article key={index} className={`flex flex-col overflow-hidden border-l-4 bg-[#222] rounded-lg shadow-lg shrink-0 ${groupId ? 'border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-[#8a152e]'}`}>
-                            <div className="w-full aspect-video bg-black shrink-0 border-b border-gray-700 relative overflow-hidden">
+                          <article key={index} className={`flex flex-col overflow-hidden border-l-4 bg-[#222] rounded-lg shadow-md shrink-0 ${groupId ? 'border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-[#8a152e]'}`}>
+                            <div className="w-full h-32 bg-black shrink-0 border-b border-gray-700 relative overflow-hidden">
                               <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="w-full h-full object-cover" />
                             </div>
                             
-                            <div className="p-3 flex flex-col gap-2">
-                              <div className="flex items-start justify-between gap-2">
-                                <h4 className="text-sm font-black text-white uppercase tracking-wide leading-tight">{item.name}</h4>
+                            <div className="p-2.5 flex flex-col gap-1.5">
+                              <div className="flex items-start justify-between gap-1">
+                                <h4 className="text-xs font-black text-white uppercase tracking-wide leading-tight truncate">{item.name}</h4>
                                 {groupId && (
-                                  <span className="bg-[#d1a153]/20 text-[#d1a153] border border-[#d1a153]/40 px-1.5 py-0.5 rounded text-[8px] font-black uppercase shrink-0">
+                                  <span className="bg-[#d1a153]/20 text-[#d1a153] border border-[#d1a153]/40 px-1 py-0.2 rounded text-[7px] font-black uppercase shrink-0">
                                     🔗 Supersérie
                                   </span>
                                 )}
                               </div>
 
-                              <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold text-gray-300 bg-[#191919] p-2 rounded border border-gray-800">
+                              <div className="flex flex-wrap items-center gap-1 text-[11px] font-bold text-gray-300 bg-[#191919] p-1.5 rounded border border-gray-800">
                                 <span className="text-[#d1a153]">{item.sets} Séries</span>
                                 <span>•</span>
                                 <span>{item.reps} Reps</span>
@@ -588,9 +594,9 @@ export default function App() {
                               </div>
 
                               {item.notes && (
-                                <p className="text-[11px] text-yellow-300 font-bold bg-yellow-950/40 p-2 rounded border border-yellow-600/30 flex items-start gap-1">
+                                <p className="text-[10px] text-yellow-300 font-bold bg-yellow-950/40 p-1.5 rounded border border-yellow-600/30 flex items-start gap-1">
                                   <span>📝</span>
-                                  <span className="flex-1">{item.notes}</span>
+                                  <span className="flex-1 truncate">{item.notes}</span>
                                 </p>
                               )}
                             </div>
@@ -610,6 +616,46 @@ export default function App() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#121212] text-white">
+      {/* Modal de escolha de treino para importar */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-[#1a1a1a] border border-gray-700 w-full max-w-md rounded-xl p-6 shadow-2xl space-y-4">
+            <h3 className="text-lg font-black uppercase text-[#d1a153]">Selecionar Treino a Importar</h3>
+            <p className="text-xs text-gray-400">Escolha qual dos treinos do escalão selecionado pretende copiar para o criador:</p>
+            
+            <div className="max-h-64 overflow-y-auto space-y-2">
+              {sessions.filter(s => s.teamId === importModalTeamId).length === 0 ? (
+                <p className="text-xs text-gray-500 py-4 text-center">Este escalão não tem nenhum treino guardado.</p>
+              ) : (
+                sessions.filter(s => s.teamId === importModalTeamId).map(session => (
+                  <div key={session.id} className="flex items-center justify-between bg-[#222] border border-gray-700 p-3 rounded">
+                    <div>
+                      <h4 className="font-bold text-sm text-white">{session.name}</h4>
+                      <p className="text-[10px] text-gray-400">{session.variations.length} variações</p>
+                    </div>
+                    <button 
+                      onClick={() => handleConfirmImportSession(session)}
+                      className="bg-[#d1a153] text-black font-black text-xs uppercase px-3 py-1.5 rounded hover:bg-yellow-500"
+                    >
+                      Importar
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-gray-800">
+              <button 
+                onClick={() => setShowImportModal(false)}
+                className="bg-gray-700 text-white text-xs font-bold px-4 py-2 rounded hover:bg-gray-600 uppercase"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <aside className="flex w-72 flex-col border-r border-gray-800 bg-[#181818]">
         <div className="flex items-center gap-3 border-b border-gray-800 p-6">
           <img src={FPF_LOGO} alt="FPF" className="h-8 w-8 object-contain" />
@@ -711,7 +757,7 @@ export default function App() {
                 <span className="text-xs font-bold uppercase text-gray-400">Importar de:</span>
                 <select 
                   onChange={(e) => {
-                    handleImportSessionFromTeam(e.target.value);
+                    handleSelectTeamToImport(e.target.value);
                     e.target.value = "";
                   }} 
                   defaultValue="" 
