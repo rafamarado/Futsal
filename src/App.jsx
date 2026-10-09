@@ -105,9 +105,9 @@ function MediaViewer({ src, mediaType, alt, className }) {
             />
             <button 
               onClick={(e) => { e.stopPropagation(); setIsPlaying(false); }}
-              className="absolute top-2 right-2 bg-black/90 hover:bg-red-900 text-white rounded px-2.5 py-1 text-xs font-bold z-10 shadow"
+              className="absolute top-2 right-2 bg-black/90 hover:bg-red-900 text-white rounded px-2 py-0.5 text-xs font-bold z-10 shadow"
             >
-              ✕ Fechar Vídeo
+              ✕ Fechar
             </button>
           </div>
         );
@@ -118,7 +118,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
         <div 
           onClick={() => setIsPlaying(true)}
           className={`relative overflow-hidden bg-black flex items-center justify-center cursor-pointer group ${className}`}
-          title="Clique para reproduzir o vídeo em grande"
+          title="Clique para reproduzir o vídeo"
         >
           <img 
             src={thumbUrl} 
@@ -127,7 +127,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
             onError={() => setHasError(true)}
           />
           <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 flex items-center justify-center transition">
-            <div className="bg-red-600 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-2xl text-base font-black pl-0.5 group-hover:scale-110 transition">
+            <div className="bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-xl text-sm font-black pl-0.5 group-hover:scale-110 transition">
               ▶
             </div>
           </div>
@@ -523,20 +523,22 @@ export default function App() {
                       const groupId = groups[index];
                       return (
                         <article key={index} className={`flex flex-col overflow-hidden border-l-4 bg-[#222] rounded-xl shadow-2xl ${groupId ? 'border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-[#8a152e]'}`}>
-                          {/* Altura flexível controlada (max-h-56) para nunca cortar os textos em baixo */}
-                          <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="w-full h-48 sm:h-56 bg-black shrink-0 border-b border-gray-700 object-contain" />
+                          {/* Altura fluida controlada por aspect-ratio e sem esmagar o texto */}
+                          <div className="w-full aspect-video bg-black shrink-0 border-b border-gray-700 relative overflow-hidden">
+                            <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="w-full h-full object-cover" />
+                          </div>
                           
-                          <div className="p-4 sm:p-5 flex flex-col gap-3">
-                            <div className="flex items-start justify-between gap-3">
-                              <h4 className="text-lg sm:text-xl font-black text-white uppercase tracking-wide leading-snug">{item.name}</h4>
+                          <div className="p-4 flex flex-col gap-2.5">
+                            <div className="flex items-start justify-between gap-2">
+                              <h4 className="text-base sm:text-lg font-black text-white uppercase tracking-wide leading-tight">{item.name}</h4>
                               {groupId && (
-                                <span className="bg-[#d1a153]/20 text-[#d1a153] border border-[#d1a153]/40 px-2.5 py-0.5 rounded text-[10px] font-black uppercase shrink-0">
+                                <span className="bg-[#d1a153]/20 text-[#d1a153] border border-[#d1a153]/40 px-2 py-0.5 rounded text-[9px] font-black uppercase shrink-0">
                                   🔗 Supersérie
                                 </span>
                               )}
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-3 text-sm sm:text-base font-bold text-gray-300 bg-[#191919] p-3 rounded-lg border border-gray-800">
+                            <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-bold text-gray-300 bg-[#191919] p-2.5 rounded-lg border border-gray-800">
                               <span className="text-[#d1a153]">{item.sets} Séries</span>
                               <span>•</span>
                               <span>{item.reps} Reps</span>
@@ -545,7 +547,7 @@ export default function App() {
                             </div>
 
                             {item.notes && (
-                              <p className="text-xs sm:text-sm text-yellow-300 font-bold bg-yellow-950/40 p-3 rounded-lg border border-yellow-600/30 flex items-start gap-2">
+                              <p className="text-xs text-yellow-300 font-bold bg-yellow-950/40 p-2.5 rounded-lg border border-yellow-600/30 flex items-start gap-1.5">
                                 <span>📝</span>
                                 <span className="flex-1">{item.notes}</span>
                               </p>
@@ -743,8 +745,7 @@ export default function App() {
                   Nome do exercício
                   <input required value={newExName} onChange={(e) => setNewExName(e.target.value)} className="mt-1 w-full border border-gray-700 bg-[#111] p-3 text-white" placeholder="Ex: Prancha" />
                 </label>
-                <label className="block text-xs font-bold uppercase text-gray-400">
-                  URL da Média (Imagem, GIF ou YouTube)
+                <label className="block text-xs font-bold uppercase text-gray-400">URL da Média (Imagem, GIF ou YouTube)</label>
                   <input type="text" required value={newExUrl} onChange={(e) => setNewExUrl(e.target.value)} className="mt-1 w-full border border-gray-700 bg-[#111] p-3 text-white" placeholder="https://... ou link do YouTube" />
                 </label>
                 <button type="submit" className="w-full bg-[#d1a153] py-3 font-black uppercase text-black">{editingExerciseId ? 'Guardar alterações' : 'Adicionar exercício'}</button>
