@@ -66,37 +66,42 @@ const SESSOES_INICIAIS = [
 
 const IMAGEM_PADRAO = 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=800';
 
-// Componente inteligente para renderizar com suporte explícito a Imagem ou Vídeo (.mp4 / YouTube embed)
+// Função auxiliar para extrair o ID do YouTube de qualquer link
+function getYouTubeId(url) {
+  if (!url) return '';
+  if (url.includes('youtu.be/')) {
+    return url.split('youtu.be/')[1]?.split('?')[0];
+  } else if (url.includes('watch?v=')) {
+    return url.split('watch?v=')[1]?.split('&')[0];
+  } else if (url.includes('embed/')) {
+    return url.split('embed/')[1]?.split('?')[0];
+  }
+  return '';
+}
+
+// Componente inteligente para renderizar Imagem, Vídeo MP4 ou Miniatura do YouTube com indicador
 function MediaViewer({ src, mediaType, alt, className }) {
   const url = src || IMAGEM_PADRAO;
   const type = mediaType || (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('.mp4') ? 'video' : 'image');
 
   if (type === 'video') {
-    // Tratamento para links do YouTube
-    if (url.includes('youtube.com') || url.includes('youtu.be')) {
-      let videoId = '';
-      if (url.includes('youtu.be/')) {
-        videoId = url.split('youtu.be/')[1]?.split('?')[0];
-      } else if (url.includes('watch?v=')) {
-        videoId = url.split('watch?v=')[1]?.split('&')[0];
-      } else if (url.includes('embed/')) {
-        videoId = url.split('embed/')[1]?.split('?')[0];
-      }
-
-      if (videoId) {
-        return (
-          <iframe
-            src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}`}
-            title={alt || 'Vídeo do Exercício'}
-            className={`${className} border-0`}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-        );
-      }
+    const ytId = getYouTubeId(url);
+    if (ytId) {
+      // Exibe a thumbnail oficial de alta qualidade do YouTube perfeitamente formatada com um badge de vídeo
+      const thumbUrl = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+      return (
+        <div className={`relative overflow-hidden bg-black flex items-center justify-center ${className}`}>
+          <img src={thumbUrl} alt={alt || 'Vídeo YouTube'} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+            <span className="bg-red-600 text-white rounded-full p-1.5 shadow-lg flex items-center justify-center text-xs">
+              ▶
+            </span>
+          </div>
+        </div>
+      );
     }
 
-    // Vídeo direto (mp4 / webm)
+    // Vídeo direto MP4 / WebM
     return (
       <video
         src={url}
@@ -109,7 +114,6 @@ function MediaViewer({ src, mediaType, alt, className }) {
     );
   }
 
-  // Imagem normal
   return (
     <img
       src={url}
@@ -502,3 +506,197 @@ export default function App() {
           {[
             ['live', '📺', 'Gestão de Sessões'],
             ['tv_display', '🖥️', 'Transmissão (Modo TV)'],
+            ['builder', '📋', 'Criar Novo Treino'],
+            ['database', '🏋️', 'Base de Exercícios']
+          ].map(([tab, icon, label]) => (
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`w-full rounded px-4 py-3 text-left font-semibold ${activeTab === tab ? 'bg-[#8a152e] text-white' : 'text-gray-400 hover:bg-gray-900 hover:text-white'}`}>
+              <span className="mr-3">{icon}</span>{label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="p-4 border-t border-gray-800 bg-[#080808]">
+          <p className="text-[11px] text-gray-400 truncate mb-2">Sessão: {user.email}</p>
+          <button onClick={handleLogout} className="w-full rounded bg-red-900/60 hover:bg-red-900 px-3 py-2 text-xs font-bold uppercase tracking-wider text-red-200">
+            Terminar Sessão
+          </button>
+        </div>
+      </aside>
+
+      <div className="relative flex flex-1 flex-col overflow-y-auto" style={{ backgroundImage: 'radial-gradient(circle at top right, #5A162433, #121212 60%)' }}>
+        <header className="border-b border-gray-800 bg-[#121212]/80 px-8 py-6 flex justify-between items-center">
+          <div>
+            <h2 className="text-3xl font-black uppercase">{activeTeam.name}</h2>
+            <p className="text-xs font-bold uppercase tracking-wide text-[#d1a153]">Consola de Controlo de Treino</p>
+          </div>
+        </header>
+
+        {activeTab === 'live' && (
+          <main className="flex-1 p-8">
+            <section className="mb-8 border border-gray-700 bg-[#181818] p-6 text-center">
+              {liveSession ? (
+                <>
+                  <p className="mb-2 font-bold uppercase text-green-400">Sessão ativa no ecrã</p>
+                  <h3 className="mb-5 text-3xl font-black uppercase">{liveSession.name}</h3>
+                  <div className="flex justify-center gap-3">
+                    <button onClick={() => setActiveTab('tv_display')} className="bg-[#d1a153] px-5 py-3 font-bold uppercase text-black">Abrir ecrã de transmissão</button>
+                    <button onClick={() => setLiveSession(null)} className="bg-[#8a152e] px-5 py-3 font-bold uppercase">Parar transmissão</button>
+                  </div>
+                </>
+              ) : (
+                <p className="font-bold text-gray-400">Nenhuma sessão em transmissão</p>
+              )}
+            </section>
+
+            <div className="mb-4 flex items-center justify-between border-b border-gray-800 pb-3">
+              <h3 className="font-bold uppercase">Sessões disponíveis para {activeTeam.name}</h3>
+              <button onClick={() => { resetSessionForm(); setActiveTab('builder'); }} className="bg-[#d1a153] px-4 py-2 text-sm font-black uppercase text-black">+ Criar treino</button>
+            </div>
+
+            {teamSessions.length === 0 ? (
+              <p className="bg-[#1a1a1a] p-8 text-center text-gray-400">Ainda não existem sessões para esta equipa.</p>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {teamSessions.map((session) => (
+                  <article key={session.id} className="flex flex-wrap items-center justify-between gap-4 border border-gray-800 bg-[#1a1a1a] p-5">
+                    <div>
+                      <h4 className="text-lg font-black uppercase">{session.name}</h4>
+                      <p className="mt-1 text-sm text-gray-400">{session.variations.length} variações</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button onClick={() => handleEditSession(session)} className="bg-gray-700 px-3 py-2 text-sm font-bold hover:bg-gray-600">Editar</button>
+                      <button onClick={() => castToTV(session)} className="bg-[#d1a153] px-3 py-2 text-sm font-black uppercase text-black">Transmitir</button>
+                      <button onClick={() => handleDeleteSession(session.id)} className="bg-red-900 px-3 py-2 text-sm font-bold">Eliminar</button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </main>
+        )}
+
+        {activeTab === 'builder' && (
+          <main className="max-w-6xl flex-1 p-8">
+            <h3 className="mb-5 text-2xl font-black uppercase text-[#d1a153]">{editingSessionId ? 'Editar treino' : 'Criar treino'}</h3>
+            <form onSubmit={handleSaveSession} className="space-y-6 border border-gray-800 bg-[#181818] p-6">
+              <label className="block text-sm font-bold uppercase text-gray-400">
+                Nome da sessão
+                <input required value={newSessionName} onChange={(e) => setNewSessionName(e.target.value)} className="mt-2 w-full border border-gray-700 bg-[#111] p-3 text-white" placeholder="Ex: Força máxima" />
+              </label>
+
+              <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+                <h4 className="font-bold uppercase">Variações / grupos</h4>
+                <button type="button" onClick={handleAddVariation} className="bg-[#d1a153] px-4 py-2 text-xs font-black uppercase text-black">+ Adicionar variação</button>
+              </div>
+
+              <div className="grid gap-5 lg:grid-cols-2">
+                {variations.map((variation, vIdx) => (
+                  <section key={variation.id} className="space-y-4 border border-gray-700 bg-[#222] p-4">
+                    <label className="block text-xs font-bold uppercase text-gray-400">
+                      Nome da variação
+                      <input required value={variation.name} onChange={(e) => setVariations(variations.map((v, i) => i === vIdx ? { ...v, name: e.target.value } : v))} className="mt-2 w-full border border-gray-600 bg-[#111] p-2 text-base text-white" />
+                    </label>
+
+                    {variation.routine.map((item, itemIdx) => (
+                      <div key={itemIdx} className={`space-y-3 border-l-4 ${item.isSuperset ? 'border-[#d1a153]' : 'border-gray-600'} bg-[#181818] p-3`}>
+                        <div className="flex items-center justify-between gap-2">
+                          <strong className="text-xs uppercase text-gray-300">Exercício {itemIdx + 1}</strong>
+                          {variation.routine.length > 1 && (
+                            <button type="button" onClick={() => handleRemoveRoutineItem(vIdx, itemIdx)} className="px-2 font-bold text-red-400">✕</button>
+                          )}
+                        </div>
+                        <select value={item.exerciseId} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'exerciseId', e.target.value)} className="w-full border border-gray-600 bg-[#222] p-2 text-sm text-white">
+                          {exercises.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
+                        </select>
+                        <div className="grid grid-cols-3 gap-2">
+                          <label className="text-xs text-gray-400">Séries <input type="number" min="1" value={item.sets} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'sets', Number(e.target.value))} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
+                          <label className="text-xs text-gray-400">Reps <input value={item.reps} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'reps', e.target.value)} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
+                          <label className="text-xs text-gray-400">Descanso (s) <input type="number" min="0" value={item.rest} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'rest', Number(e.target.value))} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
+                        </div>
+                        
+                        <div>
+                          <label className="text-xs text-gray-400 block mb-1">Notas / Observações</label>
+                          <input 
+                            type="text" 
+                            value={item.notes || ''} 
+                            onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'notes', e.target.value)} 
+                            placeholder="Ex: Focar na explosão na subida" 
+                            className="w-full border border-gray-600 bg-[#222] p-2 text-sm text-white focus:border-[#d1a153] focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="mt-2 flex items-center gap-2 border-t border-gray-700 pt-2">
+                          <input 
+                            type="checkbox" 
+                            checked={item.isSuperset || false} 
+                            onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'isSuperset', e.target.checked)} 
+                            className="h-4 w-4 accent-[#d1a153]" 
+                          />
+                          <label className="text-xs font-bold uppercase text-[#d1a153] cursor-pointer" onClick={() => handleUpdateRoutineItem(vIdx, itemIdx, 'isSuperset', !item.isSuperset)}>
+                            Ligar ao próximo exercício (Supersérie)
+                          </label>
+                        </div>
+                      </div>
+                    ))}
+                    <button type="button" onClick={() => handleAddExerciseToVariation(vIdx)} className="w-full bg-gray-700 py-2 text-sm font-bold uppercase hover:bg-gray-600">+ Adicionar exercício</button>
+                  </section>
+                ))}
+              </div>
+
+              <div className="flex justify-end gap-3 border-t border-gray-800 pt-4">
+                <button type="button" onClick={() => { resetSessionForm(); setActiveTab('live'); }} className="bg-gray-700 px-5 py-3 font-bold">Cancelar</button>
+                <button type="submit" className="bg-[#8a152e] px-5 py-3 font-black uppercase">{editingSessionId ? 'Guardar alterações' : 'Guardar sessão'}</button>
+              </div>
+            </form>
+          </main>
+        )}
+
+        {activeTab === 'database' && (
+          <main className="grid max-w-6xl flex-1 gap-8 p-8 lg:grid-cols-3">
+            <section className="h-fit border border-gray-800 bg-[#181818] p-5">
+              <h3 className="mb-4 font-bold uppercase">{editingExerciseId ? 'Editar exercício' : 'Novo exercício'}</h3>
+              <form onSubmit={handleAddExercise} className="space-y-4">
+                <label className="block text-xs font-bold uppercase text-gray-400">
+                  Nome do exercício
+                  <input required value={newExName} onChange={(e) => setNewExName(e.target.value)} className="mt-1 w-full border border-gray-700 bg-[#111] p-3 text-white" placeholder="Ex: Prancha" />
+                </label>
+                <label className="block text-xs font-bold uppercase text-gray-400">
+                  Tipo de Média
+                  <select value={newExType} onChange={(e) => setNewExType(e.target.value)} className="mt-1 w-full border border-gray-700 bg-[#111] p-3 text-white font-bold">
+                    <option value="image">🖼️ Imagem (URL)</option>
+                    <option value="video">🎥 Vídeo (MP4 / YouTube)</option>
+                  </select>
+                </label>
+                <label className="block text-xs font-bold uppercase text-gray-400">
+                  URL da Média (Imagem ou Vídeo)
+                  <input type="url" required value={newExUrl} onChange={(e) => setNewExUrl(e.target.value)} className="mt-1 w-full border border-gray-700 bg-[#111] p-3 text-white" placeholder={newExType === 'video' ? 'https://... ou link do YouTube' : 'https://...'} />
+                </label>
+                <button type="submit" className="w-full bg-[#d1a153] py-3 font-black uppercase text-black">{editingExerciseId ? 'Guardar alterações' : 'Adicionar exercício'}</button>
+              </form>
+            </section>
+            <section className="space-y-4 lg:col-span-2">
+              <h3 className="font-bold uppercase">Exercícios registados ({exercises.length})</h3>
+              <div className="grid gap-3 md:grid-cols-2">
+                {exercises.map((exercise) => (
+                  <article key={exercise.id} className="flex items-center gap-3 border border-gray-800 bg-[#1a1a1a] p-3">
+                    <MediaViewer src={exercise.mediaUrl} mediaType={exercise.mediaType} alt={exercise.name} className="h-16 w-16 shrink-0 rounded" />
+                    <div className="min-w-0 flex-1">
+                      <h4 className="truncate font-bold uppercase">{exercise.name}</h4>
+                      <span className="text-[10px] text-gray-400 uppercase bg-gray-800 px-1.5 py-0.5 rounded">
+                        {exercise.mediaType === 'video' ? '🎥 Vídeo' : '🖼️ Imagem'}
+                      </span>
+                    </div>
+                    <div className="flex gap-1">
+                      <button onClick={() => { setEditingExerciseId(exercise.id); setNewExName(exercise.name); setNewExUrl(exercise.mediaUrl); setNewExType(exercise.mediaType || 'image'); }} className="px-2 py-1 text-sm text-[#d1a153] hover:bg-gray-800">Editar</button>
+                      <button onClick={() => handleDeleteExercise(exercise.id)} className="px-2 py-1 text-sm text-red-400 hover:bg-gray-800">Eliminar</button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </main>
+        )}
+      </div>
+    </div>
+  );
+}
