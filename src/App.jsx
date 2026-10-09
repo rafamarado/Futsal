@@ -490,20 +490,22 @@ export default function App() {
     }
   };
 
-  // 1. IMPORTAÇÃO EXATA: Seleção direta do ID do treino a copiar
-  const handleImportSessionById = (sessionId) => {
+  // Função centralizada para carregar qualquer treino como cópia
+  const loadSessionIntoBuilderAsCopy = (sessionId) => {
     if (!sessionId) return;
     const sessionToImport = sessions.find(s => s.id === sessionId);
     if (!sessionToImport) return;
     
+    setEditingSessionId(null); // Assegura que é um treino NOVO
     setNewSessionName(sessionToImport.name + ' (Cópia)');
     setVariations(sessionToImport.variations.map(v => ({
       id: `v-${Date.now()}-${Math.random()}`,
       name: v.name,
       routine: v.routine.map(i => ({ ...i }))
     })));
-    setStatusMessage('📋 Treino copiado com sucesso!');
-    setTimeout(() => setStatusMessage(''), 3000);
+    setActiveTab('builder');
+    setStatusMessage('📋 Treino carregado! Clique em "Guardar" para finalizar.');
+    setTimeout(() => setStatusMessage(''), 4000);
   };
 
   const castToTV = (session) => {
@@ -530,7 +532,6 @@ export default function App() {
   const teamSessions = sessions.filter(s => s.teamId === activeTeam.id);
 
   if (activeTab === 'tv_display') {
-    // 2. MODO TV DINÂMICO: Usa flex-1 para espremer os exercícios e adaptar tudo ao ecrã
     return (
       <div className="flex h-screen w-screen flex-col bg-[#111] text-white overflow-hidden select-none">
         <header className="flex items-center justify-between border-b border-gray-800 bg-[#161616] px-6 py-2 h-14 shrink-0">
@@ -546,41 +547,41 @@ export default function App() {
           </button>
         </header>
         
-        <div className="flex-1 p-3 min-h-0 overflow-hidden">
+        <div className="flex-1 p-2 h-full min-h-0 overflow-hidden">
           {!liveSession ? (
             <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
               <p className="text-lg font-bold text-gray-400">A aguardar seleção de treino</p>
               <button onClick={() => setActiveTab('live')} className="rounded bg-[#8a152e] px-6 py-3 font-bold uppercase">Escolher sessão</button>
             </div>
           ) : (
-            <div className="grid h-full w-full gap-3 items-stretch" style={{ gridTemplateColumns: `repeat(${liveSession.variations.length}, minmax(0, 1fr))` }}>
+            <div className="grid h-full w-full gap-2 items-stretch" style={{ gridTemplateColumns: `repeat(${liveSession.variations.length}, minmax(0, 1fr))` }}>
               {liveSession.variations.map((variation) => {
                 const groups = getSupersetGroupIds(variation.routine);
                 return (
-                  <div key={variation.id} className="flex flex-col h-full bg-[#181818] p-2.5 border border-gray-800 rounded-xl overflow-hidden">
+                  <div key={variation.id} className="flex flex-col h-full bg-[#181818] p-2 border border-gray-800 rounded-xl overflow-hidden">
                     <h3 className="text-center text-xs font-black uppercase text-[#d1a153] tracking-wider py-1 mb-2 shrink-0 border-b border-gray-800">{variation.name}</h3>
                     
-                    <div className="flex flex-col flex-1 gap-2 min-h-0">
+                    <div className="flex flex-col flex-1 gap-2 min-h-0 h-full overflow-hidden">
                       {variation.routine.map((item, index) => {
                         const groupId = groups[index];
                         return (
-                          <article key={index} className={`flex flex-row flex-1 overflow-hidden bg-[#222] rounded-lg shadow-md ${groupId ? 'border-l-4 border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-l-4 border-[#8a152e]'}`}>
+                          <article key={index} className={`flex flex-row flex-1 min-h-0 overflow-hidden bg-[#222] rounded-lg shadow-md ${groupId ? 'border-l-4 border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-l-4 border-[#8a152e]'}`}>
                             
-                            <div className="w-5/12 bg-black shrink-0 relative flex items-center justify-center">
-                               <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="absolute inset-0" />
+                            <div className="w-2/5 md:w-1/3 bg-black shrink-0 relative flex items-center justify-center overflow-hidden">
+                               <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="absolute inset-0 w-full h-full object-cover" />
                             </div>
                             
-                            <div className="flex-1 p-2 flex flex-col justify-center min-w-0">
+                            <div className="flex-1 p-2 flex flex-col justify-center min-w-0 overflow-hidden">
                               <div className="flex items-start justify-between gap-1 mb-1">
-                                <h4 className="text-xs sm:text-sm font-black text-white uppercase tracking-wide leading-tight truncate">{item.name}</h4>
+                                <h4 className="text-[11px] sm:text-xs font-black text-white uppercase tracking-wide leading-tight truncate">{item.name}</h4>
                                 {groupId && (
-                                  <span className="bg-[#d1a153]/20 text-[#d1a153] border border-[#d1a153]/40 px-1 py-0.5 rounded text-[8px] font-black uppercase shrink-0">
+                                  <span className="bg-[#d1a153]/20 text-[#d1a153] border border-[#d1a153]/40 px-1 py-0.5 rounded text-[7px] font-black uppercase shrink-0">
                                     🔗 Supersérie
                                   </span>
                                 )}
                               </div>
 
-                              <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-gray-300">
+                              <div className="flex flex-wrap items-center gap-1.5 text-[9px] sm:text-[10px] font-bold text-gray-300">
                                 <span className="text-[#d1a153]">{item.sets} Séries</span>
                                 <span>•</span>
                                 <span>{item.reps} Reps</span>
@@ -589,9 +590,8 @@ export default function App() {
                               </div>
 
                               {item.notes && (
-                                <p className="text-[9px] sm:text-[10px] text-yellow-300 font-bold bg-yellow-950/40 p-1.5 mt-1.5 rounded border border-yellow-600/30 flex items-start gap-1">
-                                  <span>📝</span>
-                                  <span className="flex-1 truncate">{item.notes}</span>
+                                <p className="text-[8px] sm:text-[9px] text-yellow-300 font-bold bg-yellow-950/40 p-1 mt-1 rounded border border-yellow-600/30 truncate">
+                                  📝 {item.notes}
                                 </p>
                               )}
                             </div>
@@ -676,9 +676,32 @@ export default function App() {
               )}
             </section>
 
-            <div className="mb-4 flex items-center justify-between border-b border-gray-800 pb-3">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-4 border-b border-gray-800 pb-3">
               <h3 className="font-bold uppercase">Sessões disponíveis para {activeTeam.name}</h3>
-              <button onClick={() => { resetSessionForm(); setActiveTab('builder'); }} className="bg-[#d1a153] px-4 py-2 text-sm font-black uppercase text-black">+ Criar treino</button>
+              <div className="flex items-center gap-3">
+                <select 
+                  onChange={(e) => {
+                    loadSessionIntoBuilderAsCopy(e.target.value);
+                    e.target.value = "";
+                  }} 
+                  defaultValue="" 
+                  className="bg-[#222] border border-gray-600 text-xs p-2 text-white rounded font-bold cursor-pointer"
+                >
+                  <option value="" disabled>Importar treino...</option>
+                  {teams.map(t => {
+                    const tSessions = sessions.filter(s => s.teamId === t.id);
+                    if (tSessions.length === 0) return null;
+                    return (
+                      <optgroup key={t.id} label={t.name}>
+                        {tSessions.map(s => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                      </optgroup>
+                    );
+                  })}
+                </select>
+                <button onClick={() => { resetSessionForm(); setActiveTab('builder'); }} className="bg-[#d1a153] px-4 py-2 text-sm font-black uppercase text-black">+ Criar treino</button>
+              </div>
             </div>
 
             {teamSessions.length === 0 ? (
@@ -712,7 +735,7 @@ export default function App() {
                 <span className="text-xs font-bold uppercase text-gray-400">Importar treino:</span>
                 <select 
                   onChange={(e) => {
-                    handleImportSessionById(e.target.value);
+                    loadSessionIntoBuilderAsCopy(e.target.value);
                     e.target.value = "";
                   }} 
                   defaultValue="" 
