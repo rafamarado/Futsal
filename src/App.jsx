@@ -73,7 +73,7 @@ function getYouTubeId(url) {
   return (match && match[2].length >= 10) ? match[2] : null;
 }
 
-// Componente visual unificado e inteligente para gerir miniaturas e reprodução de vídeos do YouTube e imagens
+// Componente visual unificado e interativo para reproduzir vídeos e imagens
 function MediaViewer({ src, mediaType, alt, className }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -105,7 +105,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
             />
             <button 
               onClick={(e) => { e.stopPropagation(); setIsPlaying(false); }}
-              className="absolute top-1 right-1 bg-black/80 hover:bg-red-900 text-white rounded px-1.5 py-0.5 text-[10px] font-bold z-10"
+              className="absolute top-1 right-1 bg-black/80 hover:bg-red-900 text-white rounded px-2 py-1 text-xs font-bold z-10"
             >
               ✕ Fechar
             </button>
@@ -127,7 +127,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
             onError={() => setHasError(true)}
           />
           <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 flex items-center justify-center transition">
-            <div className="bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center shadow-lg text-xs font-black pl-0.5 group-hover:scale-110 transition">
+            <div className="bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg text-sm font-black pl-0.5 group-hover:scale-110 transition">
               ▶
             </div>
           </div>
@@ -368,7 +368,6 @@ export default function App() {
     event.preventDefault();
     if (!newExName.trim()) return;
     
-    // Auto-deteta o tipo de média com base no URL introduzido
     const urlClean = newExUrl.trim();
     const isYt = urlClean.includes('youtube.com') || urlClean.includes('youtu.be');
     const computedType = isYt || urlClean.includes('.mp4') ? 'video' : (newExType || 'image');
@@ -486,28 +485,29 @@ export default function App() {
               <button onClick={() => setActiveTab('live')} className="rounded bg-[#8a152e] px-6 py-3 font-bold uppercase">Escolher sessão</button>
             </div>
           ) : (
-            <div className="grid h-full w-full gap-5" style={{ gridTemplateColumns: `repeat(${liveSession.variations.length}, minmax(0, 1fr))` }}>
+            <div className="grid h-full w-full gap-6" style={{ gridTemplateColumns: `repeat(${liveSession.variations.length}, minmax(0, 1fr))` }}>
               {liveSession.variations.map((variation) => {
                 const groups = getSupersetGroupIds(variation.routine);
                 return (
-                  <div key={variation.id} className="flex flex-col gap-4 overflow-y-auto bg-[#181818] p-4 border border-gray-800">
-                    <h3 className="text-center text-lg font-black uppercase text-[#d1a153]">{variation.name}</h3>
+                  <div key={variation.id} className="flex flex-col gap-5 overflow-y-auto bg-[#181818] p-5 border border-gray-800 rounded-xl">
+                    <h3 className="text-center text-xl font-black uppercase text-[#d1a153] tracking-wide">{variation.name}</h3>
                     {variation.routine.map((item, index) => {
                       const groupId = groups[index];
                       return (
-                        <article key={index} className={`flex items-center gap-4 overflow-hidden border-l-4 bg-[#222] p-4 rounded shadow-md ${groupId ? 'border-[#d1a153] bg-gradient-to-r from-[#d1a153]/10 to-transparent' : 'border-[#8a152e]'}`}>
-                          <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="h-24 w-24 rounded-md border border-gray-700 shrink-0" />
-                          <div className="flex-1">
-                            <h4 className="font-bold text-white uppercase">{item.name}</h4>
-                            <p className="text-sm text-gray-400 mt-1">
+                        <article key={index} className={`flex flex-col sm:flex-row items-center gap-5 overflow-hidden border-l-4 bg-[#222] p-5 rounded-xl shadow-xl ${groupId ? 'border-[#d1a153] bg-gradient-to-r from-[#d1a153]/10 to-transparent' : 'border-[#8a152e]'}`}>
+                          {/* Mídia ampliada para Modo TV */}
+                          <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="h-44 w-full sm:w-44 sm:h-44 rounded-lg border border-gray-700 shrink-0" />
+                          <div className="flex-1 text-center sm:text-left w-full">
+                            <h4 className="text-lg font-black text-white uppercase">{item.name}</h4>
+                            <p className="text-base font-semibold text-gray-300 mt-2">
                               {item.sets} séries · {item.reps} reps · {item.rest}s descanso
                             </p>
-                            {item.notes && <p className="text-xs text-yellow-400 font-semibold mt-1">📝 {item.notes}</p>}
+                            {item.notes && <p className="text-sm text-yellow-400 font-bold mt-2 bg-yellow-950/40 p-2 rounded border border-yellow-600/30">📝 {item.notes}</p>}
                           </div>
                           {groupId && (
                             <div className="flex flex-col items-center justify-center px-2">
-                              <span className="text-[10px] font-black uppercase text-[#d1a153]">Supersérie</span>
-                              <span className="text-xl">🔗</span>
+                              <span className="text-[11px] font-black uppercase text-[#d1a153]">Supersérie</span>
+                              <span className="text-2xl">🔗</span>
                             </div>
                           )}
                         </article>
