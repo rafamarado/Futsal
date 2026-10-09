@@ -60,7 +60,7 @@ const EQUIPAS_INICIAIS = [
   { id: 'sub12f', name: 'Sub-12 F' },
   { id: 'sub11f', name: 'Sub-11 F' },
   { id: 'sub10f', name: 'Sub-10 F' },
-  { id: 'fem', name: 'Equipa Feminina' }
+  { id: 'feminina', name: 'Equipa Feminina' }
 ];
 
 const EXERCICIOS_INICIAIS = [
@@ -490,7 +490,7 @@ export default function App() {
     }
   };
 
-  // Função para importar/copiar treino de outro escalão
+  // Importar treino de outro escalão
   const handleImportSessionFromTeam = (sourceTeamId) => {
     if (!sourceTeamId) return;
     const foundSession = sessions.find(s => s.teamId === sourceTeamId);
@@ -622,7 +622,7 @@ export default function App() {
 
         <div className="border-b border-gray-800 p-4 bg-[#161616]">
           <label className="mb-2 block text-xs font-bold uppercase text-gray-400">Seleção / Escalão</label>
-          <select value={activeTeam.id} onChange={(e) => setActiveTeamId(e.target.value)} className="w-full rounded border border-gray-700 bg-[#222] p-2 font-bold text-white text-sm max-h-48 overflow-y-auto">
+          <select value={activeTeam.id} onChange={(e) => setActiveTeamId(e.target.value)} className="w-full rounded border border-gray-700 bg-[#222] p-2.5 font-bold text-white text-sm max-h-56 overflow-y-auto">
             {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
         </div>
@@ -705,7 +705,6 @@ export default function App() {
             <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
               <h3 className="text-2xl font-black uppercase text-[#d1a153]">{editingSessionId ? 'Editar treino' : 'Criar treino'}</h3>
               
-              {/* Seletor para Importar treino de outro Escalão */}
               {!editingSessionId && (
                 <div className="flex items-center gap-2 bg-[#1a1a1a] p-2 border border-gray-700 rounded">
                   <span className="text-xs font-bold uppercase text-gray-400">Importar de:</span>
