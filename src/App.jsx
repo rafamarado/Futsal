@@ -34,8 +34,9 @@ try {
 }
 
 const EQUIPAS_INICIAIS = [
-  { id: 'principal', name: 'Equipa Principal' },
-  { id: 'amaf', name: 'AMAF' },
+  { id: 'amasculina', name: 'A Masculina' },
+  { id: 'afeminina', name: 'A Feminina' },
+  { id: 'outro', name: 'Outro' },
   { id: 'sub23m', name: 'Sub-23 M' },
   { id: 'sub20m', name: 'Sub-20 M' },
   { id: 'sub19m', name: 'Sub-19 M' },
@@ -59,8 +60,7 @@ const EQUIPAS_INICIAIS = [
   { id: 'sub13f', name: 'Sub-13 F' },
   { id: 'sub12f', name: 'Sub-12 F' },
   { id: 'sub11f', name: 'Sub-11 F' },
-  { id: 'sub10f', name: 'Sub-10 F' },
-  { id: 'feminina', name: 'Equipa Feminina' }
+  { id: 'sub10f', name: 'Sub-10 F' }
 ];
 
 const EXERCICIOS_INICIAIS = [
@@ -73,7 +73,7 @@ const EXERCICIOS_INICIAIS = [
 const SESSOES_INICIAIS = [
   {
     id: 's1',
-    teamId: 'principal',
+    teamId: 'amasculina',
     name: 'Ativação & Força Máxima (-2)',
     variations: [
       {
@@ -490,7 +490,6 @@ export default function App() {
     }
   };
 
-  // Importar treino de outro escalão
   const handleImportSessionFromTeam = (sourceTeamId) => {
     if (!sourceTeamId) return;
     const foundSession = sessions.find(s => s.teamId === sourceTeamId);
