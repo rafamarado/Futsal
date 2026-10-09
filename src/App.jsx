@@ -84,7 +84,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
 
   if (hasError || !url.trim()) {
     return (
-      <div className={`bg-gray-800 flex flex-col items-center justify-center text-gray-400 text-[10px] uppercase font-bold ${className}`}>
+      <div className={`bg-gray-800 flex flex-col items-center justify-center text-gray-400 text-xs uppercase font-bold ${className}`}>
         <span>Sem Média</span>
       </div>
     );
@@ -105,9 +105,9 @@ function MediaViewer({ src, mediaType, alt, className }) {
             />
             <button 
               onClick={(e) => { e.stopPropagation(); setIsPlaying(false); }}
-              className="absolute top-1 right-1 bg-black/80 hover:bg-red-900 text-white rounded px-2 py-1 text-xs font-bold z-10"
+              className="absolute top-2 right-2 bg-black/90 hover:bg-red-900 text-white rounded px-2.5 py-1 text-xs font-bold z-10 shadow"
             >
-              ✕ Fechar
+              ✕ Fechar Vídeo
             </button>
           </div>
         );
@@ -118,7 +118,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
         <div 
           onClick={() => setIsPlaying(true)}
           className={`relative overflow-hidden bg-black flex items-center justify-center cursor-pointer group ${className}`}
-          title="Clique para reproduzir o vídeo"
+          title="Clique para reproduzir o vídeo em grande"
         >
           <img 
             src={thumbUrl} 
@@ -127,7 +127,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
             onError={() => setHasError(true)}
           />
           <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 flex items-center justify-center transition">
-            <div className="bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg text-sm font-black pl-0.5 group-hover:scale-110 transition">
+            <div className="bg-red-600 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-2xl text-base font-black pl-0.5 group-hover:scale-110 transition">
               ▶
             </div>
           </div>
@@ -465,20 +465,21 @@ export default function App() {
 
   if (activeTab === 'tv_display') {
     return (
-      <div className="flex h-screen w-screen flex-col bg-[#111] text-white">
-        <header className="flex items-center justify-between border-b border-gray-800 bg-[#161616] px-8 py-4">
+      <div className="flex h-screen w-screen flex-col bg-[#111] text-white overflow-hidden">
+        <header className="flex items-center justify-between border-b border-gray-800 bg-[#161616] px-8 py-4 shrink-0">
           <div className="flex items-center gap-3">
-            <img src={FPF_LOGO} alt="FPF" className="h-9 w-9 object-contain" />
+            <img src={FPF_LOGO} alt="FPF" className="h-10 w-10 object-contain" />
             <div>
               <h1 className="text-xl font-black uppercase text-[#d1a153]">{liveSession?.name || 'GYM FLOOR STANDBY'}</h1>
-              <p className="text-xs uppercase text-gray-400">{liveSession && liveSession.teamName}</p>
+              <p className="text-xs font-bold uppercase text-gray-400">{liveSession && liveSession.teamName}</p>
             </div>
           </div>
-          <button onClick={() => setActiveTab('live')} className="rounded border border-gray-600 bg-gray-800 px-5 py-2 font-bold uppercase hover:bg-gray-700">
+          <button onClick={() => setActiveTab('live')} className="rounded border border-gray-600 bg-gray-800 px-5 py-2 font-black uppercase hover:bg-gray-700 text-xs">
             Voltar ao Painel
           </button>
         </header>
-        <div className="flex-1 overflow-hidden p-6">
+        
+        <div className="flex-1 overflow-y-auto p-6">
           {!liveSession ? (
             <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
               <p className="text-lg font-bold text-gray-400">A aguardar seleção de treino</p>
@@ -490,26 +491,39 @@ export default function App() {
                 const groups = getSupersetGroupIds(variation.routine);
                 return (
                   <div key={variation.id} className="flex flex-col gap-5 overflow-y-auto bg-[#181818] p-5 border border-gray-800 rounded-xl">
-                    <h3 className="text-center text-xl font-black uppercase text-[#d1a153] tracking-wide">{variation.name}</h3>
+                    <h3 className="text-center text-xl font-black uppercase text-[#d1a153] tracking-wider sticky top-0 bg-[#181818] py-2 z-10 border-b border-gray-800">{variation.name}</h3>
                     {variation.routine.map((item, index) => {
                       const groupId = groups[index];
                       return (
-                        <article key={index} className={`flex flex-col sm:flex-row items-center gap-5 overflow-hidden border-l-4 bg-[#222] p-5 rounded-xl shadow-xl ${groupId ? 'border-[#d1a153] bg-gradient-to-r from-[#d1a153]/10 to-transparent' : 'border-[#8a152e]'}`}>
-                          {/* Mídia ampliada para Modo TV */}
-                          <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="h-44 w-full sm:w-44 sm:h-44 rounded-lg border border-gray-700 shrink-0" />
-                          <div className="flex-1 text-center sm:text-left w-full">
-                            <h4 className="text-lg font-black text-white uppercase">{item.name}</h4>
-                            <p className="text-base font-semibold text-gray-300 mt-2">
-                              {item.sets} séries · {item.reps} reps · {item.rest}s descanso
-                            </p>
-                            {item.notes && <p className="text-sm text-yellow-400 font-bold mt-2 bg-yellow-950/40 p-2 rounded border border-yellow-600/30">📝 {item.notes}</p>}
-                          </div>
-                          {groupId && (
-                            <div className="flex flex-col items-center justify-center px-2">
-                              <span className="text-[11px] font-black uppercase text-[#d1a153]">Supersérie</span>
-                              <span className="text-2xl">🔗</span>
+                        <article key={index} className={`flex flex-col overflow-hidden border-l-4 bg-[#222] rounded-xl shadow-2xl ${groupId ? 'border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-[#8a152e]'}`}>
+                          {/* Mídia ampliada em destaque no topo do cartão */}
+                          <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="w-full h-72 bg-black shrink-0 border-b border-gray-700" />
+                          
+                          <div className="p-5 flex flex-col gap-3">
+                            <div className="flex items-start justify-between gap-3">
+                              <h4 className="text-xl font-black text-white uppercase tracking-wide">{item.name}</h4>
+                              {groupId && (
+                                <span className="bg-[#d1a153]/20 text-[#d1a153] border border-[#d1a153]/40 px-2.5 py-0.5 rounded text-[10px] font-black uppercase shrink-0">
+                                  🔗 Supersérie
+                                </span>
+                              )}
                             </div>
-                          )}
+
+                            <div className="flex flex-wrap items-center gap-4 text-base font-bold text-gray-300 bg-[#191919] p-3 rounded-lg border border-gray-800">
+                              <span className="text-[#d1a153]">{item.sets} Séries</span>
+                              <span>•</span>
+                              <span>{item.reps} Reps</span>
+                              <span>•</span>
+                              <span>{item.rest}s Descanso</span>
+                            </div>
+
+                            {item.notes && (
+                              <p className="text-sm text-yellow-300 font-bold bg-yellow-950/40 p-3 rounded-lg border border-yellow-600/30 flex items-start gap-2">
+                                <span>📝</span>
+                                <span className="flex-1">{item.notes}</span>
+                              </p>
+                            )}
+                          </div>
                         </article>
                       );
                     })}
