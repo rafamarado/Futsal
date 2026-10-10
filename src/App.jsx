@@ -542,10 +542,14 @@ export default function App() {
 
   const teamSessions = sessions.filter(s => s.teamId === activeTeam.id);
 
+  // ==========================================
+  // ECRÃ DE TRANSMISSÃO (TV) - TAMANHOS MAXIMIZADOS
+  // ==========================================
   if (activeTab === 'tv_display') {
     return (
       <div className="flex h-screen w-screen flex-col bg-[#111] text-white overflow-hidden select-none">
         
+        {/* CABEÇALHO GIGANTE */}
         <header className="flex items-center justify-between border-b-4 border-gray-800 bg-[#161616] px-8 py-4 shrink-0">
           <div className="flex items-center gap-6">
             <img src={FPF_LOGO} alt="FPF" className="h-16 w-16 object-contain" />
@@ -572,6 +576,7 @@ export default function App() {
                 return (
                   <div key={variation.id} className="flex flex-col h-full bg-[#181818] p-4 md:p-6 border-4 border-gray-800 rounded-2xl overflow-hidden">
                     
+                    {/* TÍTULO DA VARIAÇÃO (EX: GRUPO 1) */}
                     <h3 className="text-center text-3xl md:text-4xl lg:text-5xl font-black uppercase text-[#d1a153] tracking-wider py-4 mb-4 shrink-0 border-b-4 border-gray-800">{variation.name}</h3>
                     
                     <div className="flex flex-col flex-1 gap-4 md:gap-6 min-h-0 h-full overflow-hidden">
@@ -598,6 +603,7 @@ export default function App() {
                             <div className="flex-1 p-6 md:p-8 flex flex-col justify-center min-w-0 overflow-hidden">
                               <div className="flex items-start justify-between gap-4 mb-4">
                                 
+                                {/* NOME DO EXERCÍCIO GIGANTE */}
                                 <h4 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white uppercase tracking-wide leading-tight break-words whitespace-normal">{item.name}</h4>
                                 
                                 {groupId && (
@@ -608,12 +614,14 @@ export default function App() {
                               </div>
 
                               {details.length > 0 && (
+                                {/* DETALHES (SÉRIES/REPS/DESCANSO) */}
                                 <div className="flex flex-wrap items-center gap-4 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-300">
                                   {details.reduce((prev, curr, i) => [prev, <span key={`dot-${i}`}>•</span>, curr])}
                                 </div>
                               )}
 
                               {item.notes && (
+                                {/* NOTAS GIGANTES E SEM CORTAR TEXTO */}
                                 <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-yellow-300 font-bold bg-yellow-950/40 p-4 md:p-6 mt-6 rounded-xl border-2 border-yellow-600/30 break-words whitespace-normal">
                                   📝 {item.notes}
                                 </p>
@@ -633,6 +641,9 @@ export default function App() {
     );
   }
 
+  // ==========================================
+  // DASHBOARD / EDITOR (Não foi alterado)
+  // ==========================================
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#121212] text-white">
       <aside className="flex w-72 flex-col border-r border-gray-800 bg-[#181818]">
