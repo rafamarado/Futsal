@@ -546,35 +546,35 @@ export default function App() {
     return (
       <div className="flex h-screen w-screen flex-col bg-[#111] text-white overflow-hidden select-none">
         
-        <header className="flex items-center justify-between border-b-4 border-gray-800 bg-[#161616] px-8 py-4 shrink-0">
+        <header className="flex items-center justify-between border-b-8 border-gray-800 bg-[#161616] px-8 py-6 shrink-0">
           <div className="flex items-center gap-6">
-            <img src={FPF_LOGO} alt="FPF" className="h-16 w-16 object-contain" />
+            <img src={FPF_LOGO} alt="FPF" className="h-20 w-20 object-contain" />
             <div>
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-black uppercase text-[#d1a153] leading-tight">{liveSession?.name || 'GYM FLOOR STANDBY'}</h1>
-              <p className="text-xl md:text-2xl font-bold uppercase text-gray-400 mt-1">{liveSession && liveSession.teamName}</p>
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black uppercase text-[#d1a153] leading-tight">{liveSession?.name || 'GYM FLOOR STANDBY'}</h1>
+              <p className="text-2xl md:text-3xl font-bold uppercase text-gray-400 mt-2">{liveSession && liveSession.teamName}</p>
             </div>
           </div>
-          <button onClick={() => setActiveTab('live')} className="rounded border-2 border-gray-600 bg-gray-800 px-6 py-3 font-black uppercase hover:bg-gray-700 text-lg md:text-xl">
+          <button onClick={() => setActiveTab('live')} className="rounded border-4 border-gray-600 bg-gray-800 px-8 py-4 font-black uppercase hover:bg-gray-700 text-xl md:text-2xl lg:text-3xl">
             Voltar ao Painel
           </button>
         </header>
         
-        <div className="flex-1 p-4 md:p-6 h-full min-h-0 overflow-hidden">
+        <div className="flex-1 p-6 md:p-8 h-full min-h-0 overflow-hidden">
           {!liveSession ? (
-            <div className="flex h-full flex-col items-center justify-center gap-6 text-center">
-              <p className="text-3xl md:text-4xl font-bold text-gray-400">A aguardar seleção de treino</p>
-              <button onClick={() => setActiveTab('live')} className="rounded bg-[#8a152e] px-10 py-5 text-2xl md:text-3xl font-bold uppercase">Escolher sessão</button>
+            <div className="flex h-full flex-col items-center justify-center gap-8 text-center">
+              <p className="text-4xl md:text-6xl font-bold text-gray-400">A aguardar seleção de treino</p>
+              <button onClick={() => setActiveTab('live')} className="rounded-xl bg-[#8a152e] px-12 py-6 text-3xl md:text-5xl font-black uppercase">Escolher sessão</button>
             </div>
           ) : (
-            <div className="grid h-full w-full gap-4 md:gap-6 items-stretch" style={{ gridTemplateColumns: `repeat(${liveSession.variations.length}, minmax(0, 1fr))` }}>
+            <div className="grid h-full w-full gap-6 md:gap-8 items-stretch" style={{ gridTemplateColumns: `repeat(${liveSession.variations.length}, minmax(0, 1fr))` }}>
               {liveSession.variations.map((variation) => {
                 const groups = getSupersetGroupIds(variation.routine);
                 return (
-                  <div key={variation.id} className="flex flex-col h-full bg-[#181818] p-4 md:p-6 border-4 border-gray-800 rounded-2xl overflow-hidden">
+                  <div key={variation.id} className="flex flex-col h-full bg-[#181818] p-6 md:p-8 border-[6px] border-gray-800 rounded-3xl overflow-hidden">
                     
-                    <h3 className="text-center text-3xl md:text-4xl lg:text-5xl font-black uppercase text-[#d1a153] tracking-wider py-4 mb-4 shrink-0 border-b-4 border-gray-800">{variation.name}</h3>
+                    <h3 className="text-center text-4xl md:text-5xl lg:text-6xl font-black uppercase text-[#d1a153] tracking-widest py-6 mb-6 shrink-0 border-b-[6px] border-gray-800">{variation.name}</h3>
                     
-                    <div className="flex flex-col flex-1 gap-4 md:gap-6 min-h-0 h-full overflow-hidden">
+                    <div className="flex flex-col flex-1 gap-6 md:gap-8 min-h-0 h-full overflow-hidden">
                       {variation.routine.map((item, index) => {
                         const groupId = groups[index];
                         
@@ -589,32 +589,32 @@ export default function App() {
                         if (restFmt) details.push(<span key="rest">{restFmt}</span>);
 
                         return (
-                          <article key={index} className={`flex flex-row flex-1 min-h-0 overflow-hidden bg-[#222] rounded-xl shadow-2xl ${groupId ? 'border-l-[12px] border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-l-[12px] border-[#8a152e]'}`}>
+                          <article key={index} className={`flex flex-row flex-1 min-h-0 overflow-hidden bg-[#222] rounded-2xl shadow-2xl ${groupId ? 'border-l-[16px] border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-l-[16px] border-[#8a152e]'}`}>
                             
                             <div className="w-1/3 lg:w-1/4 bg-black shrink-0 relative overflow-hidden">
-                               <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="absolute inset-0 p-2" />
+                               <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="absolute inset-0 p-3" />
                             </div>
                             
-                            <div className="flex-1 p-6 md:p-8 flex flex-col justify-center min-w-0 overflow-hidden">
-                              <div className="flex items-start justify-between gap-4 mb-4">
+                            <div className="flex-1 p-8 md:p-10 flex flex-col justify-center min-w-0 overflow-hidden">
+                              <div className="flex items-start justify-between gap-6 mb-6">
                                 
-                                <h4 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white uppercase tracking-wide leading-tight break-words whitespace-normal">{item.name}</h4>
+                                <h4 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white uppercase tracking-wider leading-tight break-words whitespace-normal">{item.name}</h4>
                                 
                                 {groupId && (
-                                  <span className="bg-[#d1a153]/20 text-[#d1a153] border-2 border-[#d1a153]/40 px-3 py-1.5 rounded-lg text-lg lg:text-xl font-black uppercase shrink-0">
+                                  <span className="bg-[#d1a153]/20 text-[#d1a153] border-4 border-[#d1a153]/40 px-5 py-3 rounded-xl text-2xl lg:text-3xl font-black uppercase shrink-0">
                                     🔗 Supersérie
                                   </span>
                                 )}
                               </div>
 
                               {details.length > 0 && (
-                                <div className="flex flex-wrap items-center gap-4 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-300">
+                                <div className="flex flex-wrap items-center gap-6 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-gray-300 mt-2 mb-2">
                                   {details.reduce((prev, curr, i) => [prev, <span key={`dot-${i}`}>•</span>, curr])}
                                 </div>
                               )}
 
                               {item.notes && (
-                                <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-yellow-300 font-bold bg-yellow-950/40 p-4 md:p-6 mt-6 rounded-xl border-2 border-yellow-600/30 break-words whitespace-normal">
+                                <p className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-yellow-300 font-black bg-yellow-950/40 p-6 md:p-8 mt-8 rounded-2xl border-4 border-yellow-600/30 break-words whitespace-normal">
                                   📝 {item.notes}
                                 </p>
                               )}
