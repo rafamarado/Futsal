@@ -542,19 +542,22 @@ export default function App() {
 
   const teamSessions = sessions.filter(s => s.teamId === activeTeam.id);
 
+  // ==========================================
+  // ECRÃ DE TRANSMISSÃO (TV) - TAMANHOS INTERMÉDIOS
+  // ==========================================
   if (activeTab === 'tv_display') {
     return (
       <div className="flex h-screen w-screen flex-col bg-[#111] text-white overflow-hidden select-none">
         
-        <header className="flex items-center justify-between border-b-4 border-gray-800 bg-[#161616] px-6 py-4 shrink-0">
+        <header className="flex items-center justify-between border-b-[3px] border-gray-800 bg-[#161616] px-6 py-4 shrink-0">
           <div className="flex items-center gap-4">
-            <img src={FPF_LOGO} alt="FPF" className="h-12 w-12 object-contain" />
+            <img src={FPF_LOGO} alt="FPF" className="h-14 w-14 object-contain" />
             <div>
               <h1 className="text-2xl md:text-3xl lg:text-4xl font-black uppercase text-[#d1a153] leading-tight">{liveSession?.name || 'GYM FLOOR STANDBY'}</h1>
-              <p className="text-sm md:text-base font-bold uppercase text-gray-400 mt-1">{liveSession && liveSession.teamName}</p>
+              <p className="text-base md:text-lg lg:text-xl font-bold uppercase text-gray-400 mt-1">{liveSession && liveSession.teamName}</p>
             </div>
           </div>
-          <button onClick={() => setActiveTab('live')} className="rounded border-2 border-gray-600 bg-gray-800 px-4 py-2 font-black uppercase hover:bg-gray-700 text-sm md:text-base">
+          <button onClick={() => setActiveTab('live')} className="rounded border-2 border-gray-600 bg-gray-800 px-5 py-2 font-black uppercase hover:bg-gray-700 text-sm md:text-base">
             Voltar ao Painel
           </button>
         </header>
@@ -572,7 +575,7 @@ export default function App() {
                 return (
                   <div key={variation.id} className="flex flex-col h-full bg-[#181818] p-4 border-[3px] border-gray-800 rounded-2xl overflow-hidden">
                     
-                    <h3 className="text-center text-xl md:text-2xl lg:text-3xl font-black uppercase text-[#d1a153] tracking-wider py-3 mb-4 shrink-0 border-b-4 border-gray-800">{variation.name}</h3>
+                    <h3 className="text-center text-xl md:text-2xl lg:text-3xl font-black uppercase text-[#d1a153] tracking-widest py-3 mb-4 shrink-0 border-b-[3px] border-gray-800">{variation.name}</h3>
                     
                     <div className="flex flex-col flex-1 gap-4 min-h-0 h-full overflow-hidden">
                       {variation.routine.map((item, index) => {
@@ -589,16 +592,16 @@ export default function App() {
                         if (restFmt) details.push(<span key="rest">{restFmt}</span>);
 
                         return (
-                          <article key={index} className={`flex flex-row flex-1 min-h-0 overflow-hidden bg-[#222] rounded-xl shadow-lg ${groupId ? 'border-l-8 border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-l-8 border-[#8a152e]'}`}>
+                          <article key={index} className={`flex flex-row flex-1 min-h-0 overflow-hidden bg-[#222] rounded-xl shadow-lg ${groupId ? 'border-l-[8px] border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-l-[8px] border-[#8a152e]'}`}>
                             
                             <div className="w-1/3 lg:w-1/4 bg-black shrink-0 relative overflow-hidden">
                                <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="absolute inset-0 p-2" />
                             </div>
                             
-                            <div className="flex-1 p-4 md:p-6 flex flex-col justify-center min-w-0 overflow-hidden">
+                            <div className="flex-1 p-4 md:p-5 flex flex-col justify-center min-w-0 overflow-hidden">
                               <div className="flex items-start justify-between gap-4 mb-2">
                                 
-                                <h4 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white uppercase tracking-wide leading-tight break-words whitespace-normal">{item.name}</h4>
+                                <h4 className="text-lg sm:text-xl md:text-2xl font-black text-white uppercase tracking-wide leading-tight break-words whitespace-normal">{item.name}</h4>
                                 
                                 {groupId && (
                                   <span className="bg-[#d1a153]/20 text-[#d1a153] border-2 border-[#d1a153]/40 px-3 py-1.5 rounded-lg text-sm lg:text-base font-black uppercase shrink-0">
@@ -608,13 +611,13 @@ export default function App() {
                               </div>
 
                               {details.length > 0 && (
-                                <div className="flex flex-wrap items-center gap-4 text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-300 mt-1 mb-2">
+                                <div className="flex flex-wrap items-center gap-4 text-base sm:text-lg md:text-xl font-bold text-gray-300 mt-1 mb-2">
                                   {details.reduce((prev, curr, i) => [prev, <span key={`dot-${i}`}>•</span>, curr])}
                                 </div>
                               )}
 
                               {item.notes && (
-                                <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-yellow-300 font-bold bg-yellow-950/40 p-3 md:p-4 mt-3 rounded-xl border-2 border-yellow-600/30 break-words whitespace-normal">
+                                <p className="text-sm sm:text-base md:text-lg text-yellow-300 font-bold bg-yellow-950/40 p-3 md:p-4 mt-2 rounded-xl border-2 border-yellow-600/30 break-words whitespace-normal">
                                   📝 {item.notes}
                                 </p>
                               )}
@@ -633,6 +636,9 @@ export default function App() {
     );
   }
 
+  // ==========================================
+  // DASHBOARD / EDITOR (Não foi alterado)
+  // ==========================================
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#121212] text-white">
       <aside className="flex w-72 flex-col border-r border-gray-800 bg-[#181818]">
