@@ -146,7 +146,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
           <img 
             src={thumbUrl} 
             alt={alt || 'Vídeo YouTube'} 
-            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+            className="w-full h-full object-contain group-hover:scale-105 transition duration-300"
             onError={() => setHasError(true)}
           />
           <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 flex items-center justify-center transition">
@@ -167,7 +167,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
         muted
         playsInline
         onError={() => setHasError(true)}
-        className={`w-full h-full object-cover ${className}`}
+        className={`w-full h-full object-contain ${className}`}
       />
     );
   }
@@ -176,7 +176,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
     <img
       src={url}
       alt={alt || 'Exercício'}
-      className={`w-full h-full object-cover ${className}`}
+      className={`w-full h-full object-contain ${className}`}
       onError={() => setHasError(true)}
     />
   );
@@ -490,13 +490,12 @@ export default function App() {
     }
   };
 
-  // Função centralizada para carregar qualquer treino como cópia
   const loadSessionIntoBuilderAsCopy = (sessionId) => {
     if (!sessionId) return;
     const sessionToImport = sessions.find(s => s.id === sessionId);
     if (!sessionToImport) return;
     
-    setEditingSessionId(null); // Assegura que é um treino NOVO
+    setEditingSessionId(null);
     setNewSessionName(sessionToImport.name + ' (Cópia)');
     setVariations(sessionToImport.variations.map(v => ({
       id: `v-${Date.now()}-${Math.random()}`,
@@ -568,7 +567,7 @@ export default function App() {
                           <article key={index} className={`flex flex-row flex-1 min-h-0 overflow-hidden bg-[#222] rounded-lg shadow-md ${groupId ? 'border-l-4 border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-l-4 border-[#8a152e]'}`}>
                             
                             <div className="w-2/5 md:w-1/3 bg-black shrink-0 relative flex items-center justify-center overflow-hidden">
-                               <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="absolute inset-0 w-full h-full object-cover" />
+                               <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="absolute inset-0 w-full h-full" />
                             </div>
                             
                             <div className="flex-1 p-2 flex flex-col justify-center min-w-0 overflow-hidden">
