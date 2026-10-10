@@ -426,9 +426,8 @@ export default function App() {
     setVariations([...variations, { id: `v-${Date.now()}`, name: `Versão V${variations.length + 1}`, routine: [criarItemRotina(exercises[0]?.id || '')] }]);
   };
 
-  // FUNÇÃO REFORÇADA PARA ELIMINAR VARIAÇÕES
   const handleRemoveVariation = (variationIndex) => {
-    if (variations.length <= 1) return; // Garante que fica sempre pelo menos uma
+    if (variations.length <= 1) return;
     setVariations(variations.filter((_, i) => i !== variationIndex));
   };
 
@@ -571,13 +570,12 @@ export default function App() {
                 const groups = getSupersetGroupIds(variation.routine);
                 return (
                   <div key={variation.id} className="flex flex-col h-full bg-[#181818] p-2 border border-gray-800 rounded-xl overflow-hidden">
-                    <h3 className="text-center text-xs font-black uppercase text-[#d1a153] tracking-wider py-1 mb-2 shrink-0 border-b border-gray-800">{variation.name}</h3>
+                    <h3 className="text-center text-sm md:text-base font-black uppercase text-[#d1a153] tracking-wider py-1.5 mb-2 shrink-0 border-b border-gray-800">{variation.name}</h3>
                     
                     <div className="flex flex-col flex-1 gap-2 min-h-0 h-full overflow-hidden">
                       {variation.routine.map((item, index) => {
                         const groupId = groups[index];
                         
-                        // LÓGICA INFALÍVEL DE FORMATAÇÃO (OCULTA ZEROS E ESPAÇOS VAZIOS)
                         const details = [];
                         const setsFmt = renderDetailString(item.sets, ' Séries');
                         if (setsFmt) details.push(<span key="sets" className="text-[#d1a153]">{setsFmt}</span>);
@@ -595,24 +593,27 @@ export default function App() {
                                <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="absolute inset-0 p-1" />
                             </div>
                             
-                            <div className="flex-1 p-2 flex flex-col justify-center min-w-0 overflow-hidden">
-                              <div className="flex items-start justify-between gap-1 mb-1">
-                                <h4 className="text-[11px] sm:text-xs font-black text-white uppercase tracking-wide leading-tight truncate">{item.name}</h4>
+                            <div className="flex-1 p-3 md:p-4 flex flex-col justify-center min-w-0 overflow-hidden">
+                              <div className="flex items-start justify-between gap-1 mb-1.5 md:mb-2">
+                                {/* TEXTO AUMENTADO PARA O NOME DO EXERCÍCIO */}
+                                <h4 className="text-sm sm:text-lg md:text-xl font-black text-white uppercase tracking-wide leading-tight truncate">{item.name}</h4>
                                 {groupId && (
-                                  <span className="bg-[#d1a153]/20 text-[#d1a153] border border-[#d1a153]/40 px-1 py-0.5 rounded text-[7px] font-black uppercase shrink-0">
+                                  <span className="bg-[#d1a153]/20 text-[#d1a153] border border-[#d1a153]/40 px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-black uppercase shrink-0">
                                     🔗 Supersérie
                                   </span>
                                 )}
                               </div>
 
                               {details.length > 0 && (
-                                <div className="flex flex-wrap items-center gap-1.5 text-[9px] sm:text-[10px] font-bold text-gray-300">
+                                {/* TEXTO AUMENTADO PARA AS SÉRIES/REPS */}
+                                <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm md:text-base font-bold text-gray-300">
                                   {details.reduce((prev, curr, i) => [prev, <span key={`dot-${i}`}>•</span>, curr])}
                                 </div>
                               )}
 
                               {item.notes && (
-                                <p className="text-[8px] sm:text-[9px] text-yellow-300 font-bold bg-yellow-950/40 p-1 mt-1 rounded border border-yellow-600/30 truncate">
+                                {/* TEXTO AUMENTADO PARA AS NOTAS */}
+                                <p className="text-[10px] sm:text-xs md:text-sm text-yellow-300 font-bold bg-yellow-950/40 p-1.5 md:p-2 mt-2 rounded border border-yellow-600/30 truncate">
                                   📝 {item.notes}
                                 </p>
                               )}
@@ -794,7 +795,6 @@ export default function App() {
                 {variations.map((variation, vIdx) => (
                   <section key={variation.id} className="space-y-4 border border-gray-700 bg-[#222] p-4 relative">
                     
-                    {/* BOTÃO ELIMINAR VARIAÇÃO MAIS DESTACADO */}
                     <div className="flex items-center justify-between mb-2">
                       <label className="text-xs font-bold uppercase text-gray-400">Nome da variação</label>
                       {variations.length > 1 && (
