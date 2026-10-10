@@ -118,11 +118,11 @@ function MediaViewer({ src, mediaType, alt, className }) {
     if (ytId) {
       if (isPlaying) {
         return (
-          <div className={`relative overflow-hidden bg-black w-full h-full ${className}`}>
+          <div className={`relative flex items-center justify-center bg-black w-full h-full ${className}`}>
             <iframe
               src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0`}
               title={alt || 'Vídeo YouTube'}
-              className="w-full h-full border-0"
+              className="w-full h-full border-0 object-contain"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             />
@@ -140,17 +140,17 @@ function MediaViewer({ src, mediaType, alt, className }) {
       return (
         <div 
           onClick={() => setIsPlaying(true)}
-          className={`relative overflow-hidden bg-black flex items-center justify-center cursor-pointer group w-full h-full ${className}`}
+          className={`relative flex items-center justify-center bg-black cursor-pointer group w-full h-full ${className}`}
           title="Clique para reproduzir o vídeo"
         >
           <img 
             src={thumbUrl} 
             alt={alt || 'Vídeo YouTube'} 
-            className="w-full h-full object-contain group-hover:scale-105 transition duration-300"
+            className="max-w-full max-h-full object-contain"
             onError={() => setHasError(true)}
           />
           <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 flex items-center justify-center transition">
-            <div className="bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-xl text-sm font-black pl-0.5 group-hover:scale-110 transition">
+            <div className="bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-xl text-sm font-black pl-0.5 transition">
               ▶
             </div>
           </div>
@@ -167,7 +167,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
         muted
         playsInline
         onError={() => setHasError(true)}
-        className={`w-full h-full object-contain ${className}`}
+        className={`max-w-full max-h-full object-contain ${className}`}
       />
     );
   }
@@ -176,7 +176,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
     <img
       src={url}
       alt={alt || 'Exercício'}
-      className={`w-full h-full object-contain ${className}`}
+      className={`max-w-full max-h-full object-contain ${className}`}
       onError={() => setHasError(true)}
     />
   );
@@ -566,8 +566,9 @@ export default function App() {
                         return (
                           <article key={index} className={`flex flex-row flex-1 min-h-0 overflow-hidden bg-[#222] rounded-lg shadow-md ${groupId ? 'border-l-4 border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-l-4 border-[#8a152e]'}`}>
                             
-                            <div className="w-2/5 md:w-1/3 bg-black shrink-0 relative flex items-center justify-center overflow-hidden">
-                               <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="absolute inset-0 w-full h-full" />
+                            {/* CAIXA DE IMAGEM 100% CONTIDA */}
+                            <div className="w-1/3 bg-black shrink-0 flex items-center justify-center p-1">
+                               <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="w-full h-full" />
                             </div>
                             
                             <div className="flex-1 p-2 flex flex-col justify-center min-w-0 overflow-hidden">
