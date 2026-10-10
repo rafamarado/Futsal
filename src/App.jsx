@@ -157,7 +157,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
             onError={() => setHasError(true)}
           />
           <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 flex items-center justify-center transition">
-            <div className="bg-red-600 text-white rounded-full w-12 h-12 md:w-20 md:h-20 flex items-center justify-center shadow-xl text-lg md:text-4xl font-black pl-1 transition">
+            <div className="bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-xl text-sm font-black pl-0.5 transition">
               ▶
             </div>
           </div>
@@ -426,8 +426,9 @@ export default function App() {
     setVariations([...variations, { id: `v-${Date.now()}`, name: `Versão V${variations.length + 1}`, routine: [criarItemRotina(exercises[0]?.id || '')] }]);
   };
 
+  // FUNÇÃO REFORÇADA PARA ELIMINAR VARIAÇÕES
   const handleRemoveVariation = (variationIndex) => {
-    if (variations.length <= 1) return;
+    if (variations.length <= 1) return; // Garante que fica sempre pelo menos uma
     setVariations(variations.filter((_, i) => i !== variationIndex));
   };
 
@@ -542,47 +543,41 @@ export default function App() {
 
   const teamSessions = sessions.filter(s => s.teamId === activeTeam.id);
 
-  // ==========================================
-  // ECRÃ DE TRANSMISSÃO (TV) - TAMANHOS MAXIMIZADOS
-  // ==========================================
   if (activeTab === 'tv_display') {
     return (
       <div className="flex h-screen w-screen flex-col bg-[#111] text-white overflow-hidden select-none">
-        
-        {/* CABEÇALHO GIGANTE */}
-        <header className="flex items-center justify-between border-b-4 border-gray-800 bg-[#161616] px-8 py-4 shrink-0">
-          <div className="flex items-center gap-6">
-            <img src={FPF_LOGO} alt="FPF" className="h-16 w-16 object-contain" />
+        <header className="flex items-center justify-between border-b border-gray-800 bg-[#161616] px-6 py-2 h-14 shrink-0">
+          <div className="flex items-center gap-3">
+            <img src={FPF_LOGO} alt="FPF" className="h-7 w-7 object-contain" />
             <div>
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-black uppercase text-[#d1a153] leading-tight">{liveSession?.name || 'GYM FLOOR STANDBY'}</h1>
-              <p className="text-xl md:text-2xl font-bold uppercase text-gray-400 mt-1">{liveSession && liveSession.teamName}</p>
+              <h1 className="text-sm font-black uppercase text-[#d1a153] leading-tight">{liveSession?.name || 'GYM FLOOR STANDBY'}</h1>
+              <p className="text-[10px] font-bold uppercase text-gray-400">{liveSession && liveSession.teamName}</p>
             </div>
           </div>
-          <button onClick={() => setActiveTab('live')} className="rounded border-2 border-gray-600 bg-gray-800 px-6 py-3 font-black uppercase hover:bg-gray-700 text-lg md:text-xl">
+          <button onClick={() => setActiveTab('live')} className="rounded border border-gray-600 bg-gray-800 px-3 py-1 font-black uppercase hover:bg-gray-700 text-[10px]">
             Voltar ao Painel
           </button>
         </header>
         
-        <div className="flex-1 p-4 md:p-6 h-full min-h-0 overflow-hidden">
+        <div className="flex-1 p-2 h-full min-h-0 overflow-hidden">
           {!liveSession ? (
-            <div className="flex h-full flex-col items-center justify-center gap-6 text-center">
-              <p className="text-3xl md:text-4xl font-bold text-gray-400">A aguardar seleção de treino</p>
-              <button onClick={() => setActiveTab('live')} className="rounded bg-[#8a152e] px-10 py-5 text-2xl md:text-3xl font-bold uppercase">Escolher sessão</button>
+            <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
+              <p className="text-lg font-bold text-gray-400">A aguardar seleção de treino</p>
+              <button onClick={() => setActiveTab('live')} className="rounded bg-[#8a152e] px-6 py-3 font-bold uppercase">Escolher sessão</button>
             </div>
           ) : (
-            <div className="grid h-full w-full gap-4 md:gap-6 items-stretch" style={{ gridTemplateColumns: `repeat(${liveSession.variations.length}, minmax(0, 1fr))` }}>
+            <div className="grid h-full w-full gap-2 items-stretch" style={{ gridTemplateColumns: `repeat(${liveSession.variations.length}, minmax(0, 1fr))` }}>
               {liveSession.variations.map((variation) => {
                 const groups = getSupersetGroupIds(variation.routine);
                 return (
-                  <div key={variation.id} className="flex flex-col h-full bg-[#181818] p-4 md:p-6 border-4 border-gray-800 rounded-2xl overflow-hidden">
+                  <div key={variation.id} className="flex flex-col h-full bg-[#181818] p-2 border border-gray-800 rounded-xl overflow-hidden">
+                    <h3 className="text-center text-xs font-black uppercase text-[#d1a153] tracking-wider py-1 mb-2 shrink-0 border-b border-gray-800">{variation.name}</h3>
                     
-                    {/* TÍTULO DA VARIAÇÃO (EX: GRUPO 1) */}
-                    <h3 className="text-center text-3xl md:text-4xl lg:text-5xl font-black uppercase text-[#d1a153] tracking-wider py-4 mb-4 shrink-0 border-b-4 border-gray-800">{variation.name}</h3>
-                    
-                    <div className="flex flex-col flex-1 gap-4 md:gap-6 min-h-0 h-full overflow-hidden">
+                    <div className="flex flex-col flex-1 gap-2 min-h-0 h-full overflow-hidden">
                       {variation.routine.map((item, index) => {
                         const groupId = groups[index];
                         
+                        // LÓGICA INFALÍVEL DE FORMATAÇÃO (OCULTA ZEROS E ESPAÇOS VAZIOS)
                         const details = [];
                         const setsFmt = renderDetailString(item.sets, ' Séries');
                         if (setsFmt) details.push(<span key="sets" className="text-[#d1a153]">{setsFmt}</span>);
@@ -594,35 +589,30 @@ export default function App() {
                         if (restFmt) details.push(<span key="rest">{restFmt}</span>);
 
                         return (
-                          <article key={index} className={`flex flex-row flex-1 min-h-0 overflow-hidden bg-[#222] rounded-xl shadow-2xl ${groupId ? 'border-l-[12px] border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-l-[12px] border-[#8a152e]'}`}>
+                          <article key={index} className={`flex flex-row flex-1 min-h-0 overflow-hidden bg-[#222] rounded-lg shadow-md ${groupId ? 'border-l-4 border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-l-4 border-[#8a152e]'}`}>
                             
-                            <div className="w-1/3 lg:w-1/4 bg-black shrink-0 relative overflow-hidden">
-                               <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="absolute inset-0 p-2" />
+                            <div className="w-1/3 bg-black shrink-0 relative overflow-hidden">
+                               <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="absolute inset-0 p-1" />
                             </div>
                             
-                            <div className="flex-1 p-6 md:p-8 flex flex-col justify-center min-w-0 overflow-hidden">
-                              <div className="flex items-start justify-between gap-4 mb-4">
-                                
-                                {/* NOME DO EXERCÍCIO GIGANTE */}
-                                <h4 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white uppercase tracking-wide leading-tight break-words whitespace-normal">{item.name}</h4>
-                                
+                            <div className="flex-1 p-2 flex flex-col justify-center min-w-0 overflow-hidden">
+                              <div className="flex items-start justify-between gap-1 mb-1">
+                                <h4 className="text-[11px] sm:text-xs font-black text-white uppercase tracking-wide leading-tight truncate">{item.name}</h4>
                                 {groupId && (
-                                  <span className="bg-[#d1a153]/20 text-[#d1a153] border-2 border-[#d1a153]/40 px-3 py-1.5 rounded-lg text-lg lg:text-xl font-black uppercase shrink-0">
+                                  <span className="bg-[#d1a153]/20 text-[#d1a153] border border-[#d1a153]/40 px-1 py-0.5 rounded text-[7px] font-black uppercase shrink-0">
                                     🔗 Supersérie
                                   </span>
                                 )}
                               </div>
 
                               {details.length > 0 && (
-                                {/* DETALHES (SÉRIES/REPS/DESCANSO) */}
-                                <div className="flex flex-wrap items-center gap-4 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-300">
+                                <div className="flex flex-wrap items-center gap-1.5 text-[9px] sm:text-[10px] font-bold text-gray-300">
                                   {details.reduce((prev, curr, i) => [prev, <span key={`dot-${i}`}>•</span>, curr])}
                                 </div>
                               )}
 
                               {item.notes && (
-                                {/* NOTAS GIGANTES E SEM CORTAR TEXTO */}
-                                <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-yellow-300 font-bold bg-yellow-950/40 p-4 md:p-6 mt-6 rounded-xl border-2 border-yellow-600/30 break-words whitespace-normal">
+                                <p className="text-[8px] sm:text-[9px] text-yellow-300 font-bold bg-yellow-950/40 p-1 mt-1 rounded border border-yellow-600/30 truncate">
                                   📝 {item.notes}
                                 </p>
                               )}
@@ -641,9 +631,6 @@ export default function App() {
     );
   }
 
-  // ==========================================
-  // DASHBOARD / EDITOR (Não foi alterado)
-  // ==========================================
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#121212] text-white">
       <aside className="flex w-72 flex-col border-r border-gray-800 bg-[#181818]">
@@ -807,6 +794,7 @@ export default function App() {
                 {variations.map((variation, vIdx) => (
                   <section key={variation.id} className="space-y-4 border border-gray-700 bg-[#222] p-4 relative">
                     
+                    {/* BOTÃO ELIMINAR VARIAÇÃO MAIS DESTACADO */}
                     <div className="flex items-center justify-between mb-2">
                       <label className="text-xs font-bold uppercase text-gray-400">Nome da variação</label>
                       {variations.length > 1 && (
