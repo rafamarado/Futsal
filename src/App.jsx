@@ -97,10 +97,10 @@ function getYouTubeId(url) {
   return (match && match[2].length >= 10) ? match[2] : null;
 }
 
-function formatDetail(val, suffix) {
-  if (!val) return null;
-  const str = val.toString().trim();
-  if (str === '' || str === '0' || str.toLowerCase() === 'n/a' || str === '-') return null;
+function renderDetailString(val, suffix) {
+  if (val === null || val === undefined) return null;
+  const str = String(val).trim();
+  if (str === '' || str === '0' || str === '-' || str.toLowerCase() === 'n/a') return null;
   return isNaN(str) ? str : `${str}${suffix}`;
 }
 
@@ -426,7 +426,9 @@ export default function App() {
     setVariations([...variations, { id: `v-${Date.now()}`, name: `Versão V${variations.length + 1}`, routine: [criarItemRotina(exercises[0]?.id || '')] }]);
   };
 
+  // FUNÇÃO REFORÇADA PARA ELIMINAR VARIAÇÕES
   const handleRemoveVariation = (variationIndex) => {
+    if (variations.length <= 1) return; // Garante que fica sempre pelo menos uma
     setVariations(variations.filter((_, i) => i !== variationIndex));
   };
 
@@ -575,15 +577,15 @@ export default function App() {
                       {variation.routine.map((item, index) => {
                         const groupId = groups[index];
                         
-                        // Extrair lógica de formatação de strings
+                        // LÓGICA INFALÍVEL DE FORMATAÇÃO (OCULTA ZEROS E ESPAÇOS VAZIOS)
                         const details = [];
-                        const setsFmt = formatDetail(item.sets, ' Séries');
+                        const setsFmt = renderDetailString(item.sets, ' Séries');
                         if (setsFmt) details.push(<span key="sets" className="text-[#d1a153]">{setsFmt}</span>);
 
-                        const repsFmt = formatDetail(item.reps, ' Reps');
+                        const repsFmt = renderDetailString(item.reps, ' Reps');
                         if (repsFmt) details.push(<span key="reps">{repsFmt}</span>);
 
-                        const restFmt = formatDetail(item.rest, 's Rest');
+                        const restFmt = renderDetailString(item.rest, 's Rest');
                         if (restFmt) details.push(<span key="rest">{restFmt}</span>);
 
                         return (
@@ -790,16 +792,18 @@ export default function App() {
 
               <div className="grid gap-5 lg:grid-cols-2">
                 {variations.map((variation, vIdx) => (
-                  <section key={variation.id} className="space-y-4 border border-gray-700 bg-[#222] p-4">
+                  <section key={variation.id} className="space-y-4 border border-gray-700 bg-[#222] p-4 relative">
                     
-                    <div className="flex items-center justify-between">
+                    {/* BOTÃO ELIMINAR VARIAÇÃO MAIS DESTACADO */}
+                    <div className="flex items-center justify-between mb-2">
                       <label className="text-xs font-bold uppercase text-gray-400">Nome da variação</label>
                       {variations.length > 1 && (
-                        <button type="button" onClick={() => handleRemoveVariation(vIdx)} className="text-xs font-bold text-red-400 hover:text-red-300">
+                        <button type="button" onClick={() => handleRemoveVariation(vIdx)} className="bg-red-900/80 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-bold shadow transition">
                           ✕ Eliminar Variação
                         </button>
                       )}
                     </div>
+                    
                     <input required value={variation.name} onChange={(e) => setVariations(variations.map((v, i) => i === vIdx ? { ...v, name: e.target.value } : v))} className="w-full border border-gray-600 bg-[#111] p-2 text-base text-white" />
 
                     {variation.routine.map((item, itemIdx) => (
