@@ -1,4 +1,4 @@
- import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import {
   getAuth,
@@ -80,8 +80,8 @@ const SESSOES_INICIAIS = [
         id: 'v1',
         name: 'Versão V1 (Titulares)',
         routine: [
-          { exerciseId: '1', sets: 4, reps: '5', rest: 90, notes: 'Focar na explosão na subida', isSuperset: false },
-          { exerciseId: '4', sets: 4, reps: '5', rest: 60, notes: 'Aterragem suave e controlada', isSuperset: false }
+          { exerciseId: '1', sets: '4', reps: '5', rest: '90', notes: 'Focar na explosão na subida', isSuperset: false },
+          { exerciseId: '4', sets: '4', reps: '5', rest: '60', notes: 'Aterragem suave e controlada', isSuperset: false }
         ]
       }
     ]
@@ -95,6 +95,13 @@ function getYouTubeId(url) {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
   const match = url.match(regExp);
   return (match && match[2].length >= 10) ? match[2] : null;
+}
+
+function formatDetail(val, suffix) {
+  if (!val) return null;
+  const str = val.toString().trim();
+  if (str === '' || str === '0' || str.toLowerCase() === 'n/a' || str === '-') return null;
+  return isNaN(str) ? str : `${str}${suffix}`;
 }
 
 function MediaViewer({ src, mediaType, alt, className }) {
@@ -183,7 +190,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
 }
 
 function criarItemRotina(exerciseId = '') {
-  return { exerciseId, sets: 3, reps: '10', rest: 60, notes: '', isSuperset: false };
+  return { exerciseId, sets: '3', reps: '10', rest: '60', notes: '', isSuperset: false };
 }
 
 function getSupersetGroupIds(routine) {
@@ -419,6 +426,10 @@ export default function App() {
     setVariations([...variations, { id: `v-${Date.now()}`, name: `Versão V${variations.length + 1}`, routine: [criarItemRotina(exercises[0]?.id || '')] }]);
   };
 
+  const handleRemoveVariation = (variationIndex) => {
+    setVariations(variations.filter((_, i) => i !== variationIndex));
+  };
+
   const handleAddExerciseToVariation = (variationIndex) => {
     setVariations(variations.map((v, i) => i === variationIndex ? { ...v, routine: [...v.routine, criarItemRotina(exercises[0]?.id || '')] } : v));
   };
@@ -563,10 +574,21 @@ export default function App() {
                     <div className="flex flex-col flex-1 gap-2 min-h-0 h-full overflow-hidden">
                       {variation.routine.map((item, index) => {
                         const groupId = groups[index];
+                        
+                        // Extrair lógica de formatação de strings
+                        const details = [];
+                        const setsFmt = formatDetail(item.sets, ' Séries');
+                        if (setsFmt) details.push(<span key="sets" className="text-[#d1a153]">{setsFmt}</span>);
+
+                        const repsFmt = formatDetail(item.reps, ' Reps');
+                        if (repsFmt) details.push(<span key="reps">{repsFmt}</span>);
+
+                        const restFmt = formatDetail(item.rest, 's Rest');
+                        if (restFmt) details.push(<span key="rest">{restFmt}</span>);
+
                         return (
                           <article key={index} className={`flex flex-row flex-1 min-h-0 overflow-hidden bg-[#222] rounded-lg shadow-md ${groupId ? 'border-l-4 border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-l-4 border-[#8a152e]'}`}>
                             
-                            {/* CAIXA DE IMAGEM 100% CONTIDA COM POSICIONAMENTO ABSOLUTO */}
                             <div className="w-1/3 bg-black shrink-0 relative overflow-hidden">
                                <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="absolute inset-0 p-1" />
                             </div>
@@ -581,13 +603,11 @@ export default function App() {
                                 )}
                               </div>
 
-                              <div className="flex flex-wrap items-center gap-1.5 text-[9px] sm:text-[10px] font-bold text-gray-300">
-                                <span className="text-[#d1a153]">{item.sets} Séries</span>
-                                <span>•</span>
-                                <span>{item.reps} Reps</span>
-                                <span>•</span>
-                                <span>{item.rest}s Rest</span>
-                              </div>
+                              {details.length > 0 && (
+                                <div className="flex flex-wrap items-center gap-1.5 text-[9px] sm:text-[10px] font-bold text-gray-300">
+                                  {details.reduce((prev, curr, i) => [prev, <span key={`dot-${i}`}>•</span>, curr])}
+                                </div>
+                              )}
 
                               {item.notes && (
                                 <p className="text-[8px] sm:text-[9px] text-yellow-300 font-bold bg-yellow-950/40 p-1 mt-1 rounded border border-yellow-600/30 truncate">
@@ -771,10 +791,16 @@ export default function App() {
               <div className="grid gap-5 lg:grid-cols-2">
                 {variations.map((variation, vIdx) => (
                   <section key={variation.id} className="space-y-4 border border-gray-700 bg-[#222] p-4">
-                    <label className="block text-xs font-bold uppercase text-gray-400">
-                      Nome da variação
-                      <input required value={variation.name} onChange={(e) => setVariations(variations.map((v, i) => i === vIdx ? { ...v, name: e.target.value } : v))} className="mt-2 w-full border border-gray-600 bg-[#111] p-2 text-base text-white" />
-                    </label>
+                    
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold uppercase text-gray-400">Nome da variação</label>
+                      {variations.length > 1 && (
+                        <button type="button" onClick={() => handleRemoveVariation(vIdx)} className="text-xs font-bold text-red-400 hover:text-red-300">
+                          ✕ Eliminar Variação
+                        </button>
+                      )}
+                    </div>
+                    <input required value={variation.name} onChange={(e) => setVariations(variations.map((v, i) => i === vIdx ? { ...v, name: e.target.value } : v))} className="w-full border border-gray-600 bg-[#111] p-2 text-base text-white" />
 
                     {variation.routine.map((item, itemIdx) => (
                       <div key={itemIdx} className={`space-y-3 border-l-4 ${item.isSuperset ? 'border-[#d1a153]' : 'border-gray-600'} bg-[#181818] p-3`}>
@@ -788,9 +814,9 @@ export default function App() {
                           {exercises.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
                         </select>
                         <div className="grid grid-cols-3 gap-2">
-                          <label className="text-xs text-gray-400">Séries <input type="number" min="1" value={item.sets} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'sets', Number(e.target.value))} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
-                          <label className="text-xs text-gray-400">Reps <input value={item.reps} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'reps', e.target.value)} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
-                          <label className="text-xs text-gray-400">Descanso (s) <input type="number" min="0" value={item.rest} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'rest', Number(e.target.value))} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" /></label>
+                          <label className="text-xs text-gray-400">Séries <input type="text" value={item.sets || ''} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'sets', e.target.value)} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" placeholder="Ex: 3" /></label>
+                          <label className="text-xs text-gray-400">Reps / Tempo <input type="text" value={item.reps || ''} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'reps', e.target.value)} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" placeholder="Ex: 10 ou 5 min" /></label>
+                          <label className="text-xs text-gray-400">Descanso <input type="text" value={item.rest || ''} onChange={(e) => handleUpdateRoutineItem(vIdx, itemIdx, 'rest', e.target.value)} className="mt-1 w-full border border-gray-600 bg-[#222] p-2 text-center text-white" placeholder="Ex: 60s ou -" /></label>
                         </div>
                         
                         <div>
