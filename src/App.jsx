@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+ import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import {
   getAuth,
@@ -122,7 +122,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
             <iframe
               src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0`}
               title={alt || 'Vídeo YouTube'}
-              className="w-full h-full border-0 object-contain"
+              className="w-full h-full border-0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             />
@@ -146,7 +146,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
           <img 
             src={thumbUrl} 
             alt={alt || 'Vídeo YouTube'} 
-            className="max-w-full max-h-full object-contain"
+            className="w-full h-full object-contain"
             onError={() => setHasError(true)}
           />
           <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 flex items-center justify-center transition">
@@ -167,7 +167,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
         muted
         playsInline
         onError={() => setHasError(true)}
-        className={`max-w-full max-h-full object-contain ${className}`}
+        className={`w-full h-full object-contain ${className}`}
       />
     );
   }
@@ -176,7 +176,7 @@ function MediaViewer({ src, mediaType, alt, className }) {
     <img
       src={url}
       alt={alt || 'Exercício'}
-      className={`max-w-full max-h-full object-contain ${className}`}
+      className={`w-full h-full object-contain ${className}`}
       onError={() => setHasError(true)}
     />
   );
@@ -566,9 +566,9 @@ export default function App() {
                         return (
                           <article key={index} className={`flex flex-row flex-1 min-h-0 overflow-hidden bg-[#222] rounded-lg shadow-md ${groupId ? 'border-l-4 border-[#d1a153] bg-gradient-to-b from-[#d1a153]/10 to-[#222]' : 'border-l-4 border-[#8a152e]'}`}>
                             
-                            {/* CAIXA DE IMAGEM 100% CONTIDA */}
-                            <div className="w-1/3 bg-black shrink-0 flex items-center justify-center p-1">
-                               <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="w-full h-full" />
+                            {/* CAIXA DE IMAGEM 100% CONTIDA COM POSICIONAMENTO ABSOLUTO */}
+                            <div className="w-1/3 bg-black shrink-0 relative overflow-hidden">
+                               <MediaViewer src={item.mediaUrl} mediaType={item.mediaType} alt={item.name} className="absolute inset-0 p-1" />
                             </div>
                             
                             <div className="flex-1 p-2 flex flex-col justify-center min-w-0 overflow-hidden">
